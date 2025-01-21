@@ -133,8 +133,8 @@ static register2(items) {
         const itemName = item.constructor.name;
         item.Type = item.Item.type = item.Item.netID = tl.item.registerNew(itemName);
         
-        const ZayahMenu  = tl.cheatMenu.addItemCategory('Zayah', 'Textures/MenuIcon.png');
-        tl.cheatMenu.addItemToCategory(ZayahMenu, item.Type);
+        const HARGES_MOD_MENU  = tl.cheatMenu.addItemCategory('Harges', 'MenuIcon.png');
+        tl.cheatMenu.addItemToCategory(HARGES_MOD_MENU, item.Type);
         
         addItemToArray(Terraria.Lang, "_itemNameCache", ModLocalization.getTranslationItemName(itemName));
         addItemToArray(Terraria.Lang, "_itemTooltipCache", ModLocalization.getTranslationItemTooltip(itemName));
