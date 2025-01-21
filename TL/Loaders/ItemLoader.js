@@ -133,7 +133,7 @@ static register2(items) {
         const itemName = item.constructor.name;
         item.Type = item.Item.type = item.Item.netID = tl.item.registerNew(itemName);
         
-        const HARGES_MOD_MENU  = tl.cheatMenu.addItemCategory('Harges', 'MenuIcon.png');
+        const HARGES_MOD_MENU  = tl.cheatMenu.addItemCategory('Harges', 'Icon.png');
         tl.cheatMenu.addItemToCategory(HARGES_MOD_MENU, item.Type);
         
         addItemToArray(Terraria.Lang, "_itemNameCache", ModLocalization.getTranslationItemName(itemName));
