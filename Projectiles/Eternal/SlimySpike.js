@@ -25,7 +25,7 @@ export default class SlimySpike extends ModProjectile {
 
 	SetStaticDefaults() {
 		super.SetStaticDefaults();
-		ModProjectile.register(SpikeGlow);
+		ModProjectile.register(BlueGlowRing);
 
 		HallowedBloom = tl.texture.load('Projectiles/trailBase.png');
 		Spike = tl.texture.load(`${this.Texture}.png`);
@@ -47,38 +47,55 @@ export default class SlimySpike extends ModProjectile {
 	AIMod(Projectile) {}
 
 	OnHitPlayerMod(projectile, player, damage, crit) {
-	    player.AddBuff(BuffID.Slimed, 60 * 5, true, false)
+		player.AddBuff(BuffID.Slimed, 60 * 5, true, false);
 	}
 }
-
-class SpikeGlow extends ModProjectile {
+class BlueGlowRing extends ModProjectile {
 	constructor() {
 		super();
-		this.Texture = `Projectiles/Eternal/GlowLine`;
-		this.HallowedBloom = null;
+		this.Texture = `Projectiles/GlowRing`;
 	}
 
 	SetStaticDefaults() {
 		super.SetStaticDefaults();
-		HallowedBloom = tl.texture.load('Projectiles/trailBase.png');
-		ProjectileID.Sets.TrailingMode[this.Type] = 3;
-		ProjectileID.Sets.TrailCacheLength[this.Type] = 3;
-		this.trailLoop = 0;
+		this.animationLeft = 30;
 	}
 
 	SetDefaults() {
-		this.Projectile.width = 1;
-		this.Projectile.height = 146;
-		this.Projectile.hostile = true;
+		this.Projectile.hostile = false;
 		this.Projectile.friendly = false;
-		this.Projectile.timeLeft = 69;
-		this.Projectile.aiStyle = 1;
-		this.Projectile.tileCollide = true;
+		this.Projectile.timeLeft = this.animationLeft;
+		this.Projectile.aiStyle = 0;
+		this.Projectile.tileCollide = false;
+		this.Projectile.scale = 0.4;
 	}
 
-	AIMod(Projectile) {}
+	AIMod(Projectile) {
+		if (Projectile.timeLeft <= this.animationLeft / 2) {
+			Projectile.scale -= 0.07;
+		} else Projectile.scale -= 0.02;
+
+		if (Projectile.scale <= 0) Projectile.Kill();
+	}
 
 	PreDrawMod(Projectile, lightColor) {
-		return true;
+		const screenPosition = Main.screenPosition;
+		const tex = TextureAssets.Projectile[Projectile.type].Value;
+		const texWidth = tex.Width;
+		const texHeight = tex.Height;
+
+		const pos = v_Subtract(Projectile.Center, screenPosition);
+		// const truePos = Vector2_new(pos.X - texWidth / 2, pos.Y - texHeight / 2);
+		const pivot = Vector2_new(texWidth / 2, texHeight / 2);
+
+		Main.spriteBatch[
+			'void Draw(Texture2D texture, Vector2 position, Nullable`1 sourceRectangle, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth)'
+		](tex, pos, null, Color.Red, Projectile.rotation, pivot, Projectile.scale * 0.5, null, 0.0);
+
+		Main.spriteBatch[
+			'void Draw(Texture2D texture, Vector2 position, Nullable`1 sourceRectangle, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth)'
+		](tex, pos, null, Color.Red, Projectile.rotation, pivot, Projectile.scale, null, 0.0);
+
+		return false;
 	}
 }
