@@ -30,9 +30,14 @@ export default class SlimeBoss extends GlobalNPC {
 			this.smashJumpDelay = 0;
 			this.SmashPos = null;
 			this.canSaveSmashPos = true;
+			this.canStomp = false;
+			this.canRainProj = 0;
+			this.canShootProjInAllDir = false;
 		}
 
 		if (npc.type === 535) {
+			npc.life *= 5;
+			npc.lifeMax *= 5;
 		}
 	}
 
@@ -41,7 +46,7 @@ export default class SlimeBoss extends GlobalNPC {
 			this.SpikeRainDelay++;
 			this.inJump = npc.ai[0] == -15; // -300 to -1
 			this.inSuperJump = npc.ai[2] == 0; // in Big jump
-			this.inPhase2 = npc.life < npc.lifeMax * 0.6;
+			this.inPhase2 = npc.life < npc.lifeMax * 0.8;
 
 			const ShootSpikeAllDir = (projID = ModProjectile.getTypeByName('SlimySpike')) => {
 				let damage = 10;
@@ -87,7 +92,6 @@ export default class SlimeBoss extends GlobalNPC {
                     @summary make 14 spikes in sky
                 */
 				if (this.SpikeRainDelay % 200 === 0) ShootFallSpike(14);
-
 				/**
 				     @summary make spike in all direction in Jump
 				 */
@@ -99,40 +103,52 @@ export default class SlimeBoss extends GlobalNPC {
 				    @summary Make a Blue circle glow to see Pre Jump
 				*/
 
-				if (npc.ai[0] <= -60 || this.inSuperJump) {
+				/*REMOVED 		if (npc.ai[0] <= -60 || this.inSuperJump) {
 					// perfect pre Jump.
 					if (this.preJump === false) {
 						MakeBlueCircleWarn();
 						this.preJump = true;
 					}
 				} else this.preJump = false; // Reset if no it's in Jump.
+				*/
 			};
 
 			const SmashJump = () => {
+				this.canRainProj--;
+				Math.abs(this.canRainProj);
 				this.smashJumpDelay++;
 
-				let Distance = 80; //px
+				let Distance = 280; //px
 
-				let PrePos = vector2(Main.player[0].Center.X, Main.player[0].Center.Y - Distance);
+				let PrePos = vector2(Main.player[0].position.X, Main.player[0].position.Y - Distance);
 
 				if (this.canSaveSmashPos) {
 					this.SmashPos = PrePos;
 				}
 
-				Main.NewText(`${this.smashJumpDelay}`, 255, 255, 255);
+				// Main.NewText(`${this.smashJumpDelay}`, 255, 255, 255);
 
 				if (this.smashJumpDelay === 360) MakeBlueCircleWarn(this.SmashPos);
 
 				if (this.smashJumpDelay > 360) {
+					npc.ai[0] = -150;
 					this.canSaveSmashPos = false;
 				} else this.canSaveSmashPos = true;
 
 				if (this.smashJumpDelay === 400) {
 					npc.position = this.SmashPos;
 					this.smashJumpDelay = 0;
+					npc.velocity = vector2(npc.velocity.X, npc.velocity.Y + 8000);
+					this.canStomp = true;
+				}
+
+				if (this.canStomp === true && npc.velocity.Y === 0) {
+					ShootFallSpike(14);
+					this.canStomp = false;
 				}
 			};
-			SmashJump();
+
+			if (this.inPhase2) SmashJump();
 			// if (this.inPhase2) {
 			// 					Main.NewText(`Called`, 255, 255, 255);
 			// 				}
@@ -140,5 +156,7 @@ export default class SlimeBoss extends GlobalNPC {
 		}
 	}
 
-	OnHitPlayer(npc, player) {}
+	OnHitPlayer(npc, player) {
+		player.AddBuff(BuffID.Slimed, 60 * 10, true, false);
+	}
 }
