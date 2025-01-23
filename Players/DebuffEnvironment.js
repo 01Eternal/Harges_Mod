@@ -7,7 +7,6 @@ using('Terraria');
 using('Terraria.ID');
 export default class DebuffEnvironment extends ModPlayer {
 	PreUpdateEquips(player) {
-	    
 		const ApplyDebuffDebuff = () => {
 			// In Water
 			if (this.player.wet) {
@@ -30,26 +29,26 @@ export default class DebuffEnvironment extends ModPlayer {
 				}
 
 				// Generic
-				if (this.player.ZoneCrimson) {
-					this.player.AddBuff(BuffID.Bleeding, 2, true, false);
-				}
 
 				if (this.player.ZoneCorrupt) {
 					this.player.AddBuff(BuffID.OnFire, 2, true, false);
 				}
+			}
+			if (this.player.ZoneUnderworldHeight) {
+				this.player.AddBuff(BuffID.OnFire, 2, true, false);
+			}
+			if (this.player.ZoneCrimson) {
+				this.player.AddBuff(BuffID.Bleeding, 2, true, false);
+			}
 
-				if (this.player.ZoneUnderworldHeight) {
-					this.player.AddBuff(BuffID.OnFire, 2, true, false);
-				}
+			// if player have Slimed Debuff Reduce Move Speed in 70%
 
-				// if player have Slimed Debuff Reduce velocity in 25%
-				if (this.player.drippingSlime) {
-					// Main.NewText(`called`, 255, 255, 255);
-					this.player.moveSpeed -= 0.4; //60%
-				}
+			if (this.player.drippingSlime) {
+				this.player.moveSpeed *= 0.6; //
+				this.player.jumpHeight *= 0.6; //
 			}
 		};
-		
 		ApplyDebuffDebuff();
+		BuffID.Sets.TimeLeftDoesNotDecrease[BuffID.Slimed] = false;
 	}
 }
