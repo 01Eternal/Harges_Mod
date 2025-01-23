@@ -157,6 +157,6 @@ export default class SlimeBoss extends GlobalNPC {
 	}
 
 	OnHitPlayer(npc, player) {
-		player.AddBuff(BuffID.Slimed, 60 * 10, true, false);
+	    if (npc.type === 50) player.AddBuff(BuffID.Slimed, 60 * 10, true, false);
 	}
 }
