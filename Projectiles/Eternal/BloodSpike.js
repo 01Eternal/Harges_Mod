@@ -119,7 +119,7 @@ export default class BloodSpike extends ModProjectile {
 
 	OnHitPlayerMod(projectile, player, damage, crit) {
 		player.AddBuff(BuffID.OnFire, 60 * 7, true, false);
-		player.AddBuff(BuffID.Slow, 60 * 2, true, false);
+		player.AddBuff(BuffID.Slow, 30 * 2, true, false); // 30 = 1s 
 		player.AddBuff(BuffID.Bleeding, 60 * 5, true, false);
 	}
 }
