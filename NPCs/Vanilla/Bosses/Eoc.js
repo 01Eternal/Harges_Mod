@@ -13,67 +13,52 @@ const Multiply = Vector2['Vector2 Multiply(Vector2 value1, float scaleFactor)'];
 const Normalize = Vector2['Vector2 Normalize(Vector2 value)'];
 const Subtract = Vector2['Vector2 Subtract(Vector2 value1, Vector2 value2)'];
 
-export default class SlimeBoss extends GlobalNPC {
+export default class Eoc extends GlobalNPC {
 	constructor() {
 		super();
 	}
 
 	SetDefaults(npc) {
-		if (npc.type === 50) {
+		if (npc.type === 4) {
 			npc.life *= 1.15;
 			npc.lifeMax *= 1.15;
-			this.inJump = null;
-			this.inSuperJump = null;
-
-			this.preJump = false;
-			this.preSuperaJump = false;
-			this.smashJumpDelay = 0;
-			this.SmashPos = null;
-			this.canSaveSmashPos = true;
-			this.canStomp = false;
-			this.canRainProj = 0;
-		}
-
-		if (npc.type === 535) {
+			this.weakDash = null;
+			this.strongDash = null;
+			this.inPhaseTranslation = null;
+			this.inPhase4 = null;
+			this.RotateDelay = 0;
+			this.RotatePi = 0;
+			this.NotHaveAlpha = false;
+			this.rotateCount = 1;
+			this.rotateDir = true;
+			this.minionSpawnDelay = 0;
 		}
 	}
 
 	AI(npc) {
-		if (npc.type == 50) {
-			this.SpikeRainDelay++;
-			this.inJump = npc.ai[0] == -15; // -300 to -1
-			this.inSuperJump = npc.ai[2] == 0; // in Big jump
-			this.inPhase2 = npc.life < npc.lifeMax * 0.6;
+		if (npc.type == 4) {
+			if (Main.player[Main.myPlayer].statLife === 0) return;
 
-			const ShootSpikeAllDir = (projID = ModProjectile.getTypeByName('SlimySpike')) => {
-				let damage = 10;
+			let damage = 15; // 50
+			const ShootSpikeInAllDirections = (value = 10) => {
+				const Direction = [vector2(value, 0), vector2(-value, 0), vector2(0, value), vector2(0, -value), vector2(-value, -value), vector2(value, value)];
 
-				// prettier ignore format
-				const everyDir = [
-					vector2(-15, 0), //
-					vector2(15, 0),
-					vector2(15, 15),
-					vector2(-15, 15),
-					vector2(15, -15),
-					vector2(-15, 15)
-				];
-
-				everyDir.forEach((dir, i) => {
-					NewProjectile(Projectile.GetNoneSource(), npc.Center, dir, projID, damage, 0, Main.myPlayer, 0, 0, 0);
+				Direction.forEach((dir, i) => {
+					NewProjectile(Projectile.GetNoneSource(), npc.Center, dir, ModProjectile.getTypeByName('BloodSpike'), damage, 0, Main.myPlayer, 0, 0, 0);
 				});
 			};
 
-			const MakeBlueCircleWarn = (Position = npc.Center) =>
-				NewProjectile(Projectile.GetNoneSource(), Position, vector2(0, 0), ModProjectile.getTypeByName('BlueGlowRing'), 25, 0, Main.myPlayer, 0, 0, 0);
+			const MakeRedCircleWarn = () => {
+				return NewProjectile(Projectile.GetNoneSource(), npc.Center, vector2(0, 0), ModProjectile.getTypeByName('RedGlowRing'), 25, 0, Main.myPlayer, 0, 0, 0);
+			};
 
-			const ShootFallSpike = (quantity = 3, projID = ModProjectile.getTypeByName('SlimySpike')) => {
-				let damage = 10;
+			const ShootFallSpike = (quantity = 3) => {
 				for (let i = 0; i < quantity; i++) {
 					NewProjectile(
 						Projectile.GetNoneSource(),
-						vector2(Main.player[Main.myPlayer].Center.X - 512 + i * 75, Main.player[Main.myPlayer].Center.Y - 400),
-						vector2(0, 1),
-						projID,
+						npc.Center,
+						vector2(npc.velocity.X + i * 2 * npc.direction, npc.velocity.Y - 7),
+						ModProjectile.getTypeByName('BloodSpike'),
 						damage,
 						0,
 						Main.myPlayer,
@@ -84,75 +69,171 @@ export default class SlimeBoss extends GlobalNPC {
 				}
 			};
 
-			const SimpleAI = () => {
-				/**
-                    @summary make 14 spikes in sky
-                */
-				if (this.SpikeRainDelay % 200 === 0) ShootFallSpike(14);
+			const player = Main.player[npc.target];
 
-				/**
-				     @summary make spike in all direction in Jump
-				 */
-				if (this.inJump) {
-					ShootSpikeAllDir();
+			const RotateInPlayer = (distance = 600, speed = 0.1) => {
+				if (!player || player.dead) return;
+
+				const playerPosition = player.Center;
+
+				if (this.rotateDir == true) {
+					this.RotatePi += speed;
+					if (this.RotatePi > Math.PI * 2) this.RotatePi -= Math.PI * 2;
+				}
+				if (this.rotateDir == false) {
+					this.RotatePi -= speed;
+					if (this.RotatePi < -Math.PI * 2) this.RotatePi += Math.PI * 2;
 				}
 
-				/**
-				    @summary Make a Blue circle glow to see Pre Jump
-				*/
+				const newX = playerPosition.X + Math.cos(this.RotatePi) * distance;
+				const newY = playerPosition.Y + Math.sin(this.RotatePi) * distance;
+				npc.position = vector2(newX - npc.width / 2, newY - npc.height / 2);
+				npc.ai[1] = 0;
+			};
 
-				/*REMOVED 		if (npc.ai[0] <= -60 || this.inSuperJump) {
-					// perfect pre Jump.
-					if (this.preJump === false) {
-						MakeBlueCircleWarn();
-						this.preJump = true;
+			if (!this.lastAtack) {
+				this.weakDash = npc.ai[1] == 2 && npc.ai[2] == 1;
+				this.strongDash = npc.ai[1] == 4 && npc.ai[2] == 1;
+				this.inPhaseTranslation = npc.ai[0] == 2 ? true : false;
+				this.inPhase4 = npc.life < npc.lifeMax * 0.4;
+
+				// Main.NewText(`RotateTime : ${this.RotateTime}\n RotateDelay : ${this.RotateDelay} \n rotateCount : ${this.rotateCount}`, 255, 255, 255);
+
+				// npc.ai[1]= 2 // Lock he
+
+				// Main.NewText(`${this.rotateCount}`, 255, 255, 255);
+				// const phase_3 = npc.ai[0] == 3;
+
+				if (this.NotHaveAlpha) {
+					if (npc.alpha < 255) npc.alpha += 2;
+				} else {
+					if (npc.alpha > 0) npc.alpha -= 3;
+				}
+
+				// No Black eye : )
+				if (npc.alpha > 255) npc.alpha = 255;
+				if (npc.alpha < 0) npc.alpha = 0;
+
+				if (this.weakDash) {
+					MakeRedCircleWarn();
+
+					if (!this.inPhase4) {
+						ShootFallSpike(4);
+					} else {
 					}
-				} else this.preJump = false; // Reset if no it's in Jump.
-				*/
-			};
-
-			const SmashJump = () => {
-				this.canRainProj--;
-				Math.abs(this.canRainProj);
-				this.smashJumpDelay++;
-
-				let Distance = 280; //px
-
-				let PrePos = vector2(Main.player[0].position.X, Main.player[0].position.Y - Distance);
-
-				if (this.canSaveSmashPos) {
-					this.SmashPos = PrePos;
+				}
+				if (this.strongDash) {
+					MakeRedCircleWarn();
+					if (!this.inPhase4) {
+						ShootSpikeInAllDirections(15);
+					} else {
+						if (this.rotateCount == 3) {
+							ShootSpikeInAllDirections(15);
+						}
+					}
 				}
 
-				// Main.NewText(`${this.smashJumpDelay}`, 255, 255, 255);
+				if (this.inPhase4) {
+					const AI_EspecialDashs = () => {
+						if (this.RotateTime > 0) {
+							this.minionSpawnDelay++;
+							if (this.minionSpawnDelay == 30) {
+								this.minionSpawnDelay = 0;
+								NPC.NewNPC(npc.GetSpawnSourceForNPCFromNPCAI(), npc.Center.X, npc.Center.Y, 5, 0, 0, 0, 0, 0, Main.myPlayer);
+							}
+							/**
+							 * @summary Enable The RotateDelay With Velocity And Radius
+							 */
+							const Radius = 400;
+							const Velocity = 0.07; // old 0.05
+							RotateInPlayer(Radius, Velocity);
 
-				if (this.smashJumpDelay === 360) MakeBlueCircleWarn(this.SmashPos);
+							/**
+							 * @summary logic for Especial dash And RotateDelay
+							 */
 
-				if (this.smashJumpDelay > 360) {
-					npc.ai[0] = -150;
-					this.canSaveSmashPos = false;
-				} else this.canSaveSmashPos = true;
+							/**
+							 * @summary Stop Dashs and Time
+							 */
+							npc.ai[2] = 0; // Stop Dash Timer
+							npc.ai[3] = 0; // Stop Dashs (Lock in phase 0)
 
-				if (this.smashJumpDelay === 400) {
-					npc.position = this.SmashPos;
-					this.smashJumpDelay = 0;
-					npc.velocity = vector2(npc.velocity.X, npc.velocity.Y + 8000);
-					this.canStomp = true;
+							/**
+							 * @summary Dash It's In Enabled - 5 Ticks of delay.
+							 */
+							if (this.RotateTime === 5) {
+								this.rotateDir = !this.rotateDir;
+								// MakeRedCircleWarn();
+								// Increment The Special Dashs Counter
+								// this.rotateCount++;
+							}
+
+							this.NotHaveAlpha = true;
+						} else {
+							// if rotate no it's Enabled
+							this.NotHaveAlpha = false;
+							this.RotateDelay++;
+						}
+
+						if (this.rotateCount === 1) {
+							if (npc.ai[2] > 0 && npc.ai[3] === 1) {
+								this.RotateTime = 200;
+								this.rotateCount = 2;
+							}
+						} else if (this.rotateCount === 2) {
+							if (npc.ai[2] > 0 && npc.ai[3] === 2) {
+								ShootFallSpike(6);
+								this.RotateTime = 200;
+								this.rotateCount = 3;
+							}
+						} else if (this.rotateCount === 3) {
+							if (npc.ai[2] > 0 && npc.ai[3] === 3) {
+								this.RotateTime = 200;
+								this.rotateCount = 1;
+							}
+						}
+					};
+
+					AI_EspecialDashs();
+
+					if (this.RotateTime > -1) this.RotateTime--;
+					if (this.RotateTime === 0) npc.ai[2] = 400;
+
+					// Verify if npc dash Timer i bigger of 5 and the boss dash is equal 0
+					if (npc.ai[2] > 5 && npc.ai[3] === 0) {
+						// Main.NewText(`called NPC active rotate`, 255, 255, 255);
+
+						/**
+						 * @summary Every 7 Seconds Start de AI_EspecialDashs()
+						 */
+						if (this.RotateDelay >= 60 * 2) {
+							this.RotateDelay = 0;
+							this.RotateTime = 200;
+						}
+					}
+				} else {
+					/**
+					 * @summary Reset Values else inPhase4
+					 */
+					this.NotHaveAlpha = false;
+					this.RotateDelay = 0;
+					this.RotateTime = 0;
 				}
 
-				if (this.canStomp === true && npc.velocity.Y === 0) {
-					ShootFallSpike(14);
-					this.canStomp = false;
+				if (!this.inPhaseTranslation && !this.weakDash) {
+					// Removed in 1.5 npc.rotation = Utils.ToRotation(Subtract(player.position, npc.Center)) + -Math.PI / 2;
 				}
-			};
-
-			SmashJump();
-			// if (this.inPhase2) {
-			// 					Main.NewText(`Called`, 255, 255, 255);
-			// 				}
-			SimpleAI();
+			}
 		}
 	}
 
-	OnHitPlayer(npc, player) {}
+	OnHitPlayer(npc, player) {
+		if (npc.type === 4) {
+			player.AddBuff(BuffID.BrokenArmor, 60 * 15, true, false);
+
+			// Cursed flame 6s => Acid venom 2s
+			player.AddBuff(BuffID.Venom, 30 * 2, true, false); // 30 = 1s
+			player.AddBuff(BuffID.Obstructed, 60 * 2, true, false);
+		}
+	}
 }
