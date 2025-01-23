@@ -118,7 +118,7 @@ export default class SlimeBoss extends GlobalNPC {
 				Math.abs(this.canRainProj);
 				this.smashJumpDelay++;
 
-				let Distance = 280; //px
+				let Distance = 400; //px
 
 				let PrePos = vector2(Main.player[0].position.X, Main.player[0].position.Y - Distance);
 
@@ -142,9 +142,13 @@ export default class SlimeBoss extends GlobalNPC {
 					this.canStomp = true;
 				}
 
-				if (this.canStomp === true && npc.velocity.Y === 0) {
-					ShootFallSpike(14);
-					this.canStomp = false;
+				if (this.canStomp === true) {
+					npc.velocity = vector2(0, npc.velocity.Y * 1.2);
+					// npc.ai[0] = -1000
+					if (npc.velocity.Y === 0) {
+						ShootFallSpike(14);
+						this.canStomp = false;
+					}
 				}
 			};
 
@@ -157,6 +161,6 @@ export default class SlimeBoss extends GlobalNPC {
 	}
 
 	OnHitPlayer(npc, player) {
-	    if (npc.type === 50) player.AddBuff(BuffID.Slimed, 60 * 10, true, false);
+		if (npc.type === 50) player.AddBuff(BuffID.Slimed, 60 * 10, true, false);
 	}
 }
