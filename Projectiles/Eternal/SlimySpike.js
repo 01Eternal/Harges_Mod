@@ -90,11 +90,11 @@ class BlueGlowRing extends ModProjectile {
 
 		Main.spriteBatch[
 			'void Draw(Texture2D texture, Vector2 position, Nullable`1 sourceRectangle, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth)'
-		](tex, pos, null, Color.Red, Projectile.rotation, pivot, Projectile.scale * 0.5, null, 0.0);
+		](tex, pos, null, Color.Blue, Projectile.rotation, pivot, Projectile.scale * 0.5, null, 0.0);
 
 		Main.spriteBatch[
 			'void Draw(Texture2D texture, Vector2 position, Nullable`1 sourceRectangle, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth)'
-		](tex, pos, null, Color.Red, Projectile.rotation, pivot, Projectile.scale, null, 0.0);
+		](tex, pos, null, Color.Blue, Projectile.rotation, pivot, Projectile.scale, null, 0.0);
 
 		return false;
 	}
