@@ -27,28 +27,24 @@ export default class DebuffEnvironment extends ModPlayer {
 				if (this.player.ZoneCorrupt) {
 					this.player.AddBuff(BuffID.CursedInferno, 2, true, false);
 				}
-
-				// Generic
-
-				if (this.player.ZoneCorrupt) {
-					this.player.AddBuff(BuffID.OnFire, 2, true, false);
-				}
 			}
+			// Generic
 			if (this.player.ZoneUnderworldHeight) {
 				this.player.AddBuff(BuffID.OnFire, 2, true, false);
+			}
+
+			if (this.player.ZoneCorrupt) {
+				this.player.AddBuff(BuffID.Darkness, 2, true, false);
 			}
 			if (this.player.ZoneCrimson) {
 				this.player.AddBuff(BuffID.Bleeding, 2, true, false);
 			}
 
 			// if player have Slimed Debuff Reduce Move Speed in 70%
-
 			if (this.player.drippingSlime) {
-				this.player.moveSpeed *= 0.6; //
-				this.player.jumpHeight *= 0.6; //
+				this.player.moveSpeed *= 0.6; //40%
+				this.player.jumpHeight *= 0.6; //40%
 			}
 		};
-		ApplyDebuffDebuff();
-		BuffID.Sets.TimeLeftDoesNotDecrease[BuffID.Slimed] = false;
 	}
 }
