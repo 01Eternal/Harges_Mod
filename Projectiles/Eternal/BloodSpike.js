@@ -54,7 +54,7 @@ export default class BloodSpike extends ModProjectile {
 		}
 
 		Projectile.scale -= 0.005;
-		if (Projectile.scale <= 0) Projectile.Kill()
+		if (Projectile.scale <= 0) Projectile.Kill();
 		//Main.NewText(`${Projectile.velocity.Y}`, 255, 255, 255);
 
 		// if (Projectile.velocity.Y == 0) Projectile.Kill();
@@ -119,7 +119,7 @@ export default class BloodSpike extends ModProjectile {
 
 	OnHitPlayerMod(projectile, player, damage, crit) {
 		player.AddBuff(BuffID.OnFire, 60 * 7, true, false);
-		player.AddBuff(BuffID.Slow, 60 * 3, true, false);
+		player.AddBuff(BuffID.Slow, 60 * 2, true, false);
 		player.AddBuff(BuffID.Bleeding, 60 * 5, true, false);
 	}
 }
