@@ -46,5 +46,7 @@ export default class DebuffEnvironment extends ModPlayer {
 				this.player.jumpHeight *= 0.6; //40%
 			}
 		};
+
+		ApplyDebuffDebuff();
 	}
 }
