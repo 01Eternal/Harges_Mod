@@ -12,7 +12,7 @@ import { ItemRarityID } from './Terraria/ID_ItemRarityID.js';
  */
 import { ModItem } from './ModItem.js';
 import { ModProjectile } from './ModProjectile.js';
-
+import  HargesApi  from '../Harges/Harges.js'
 import { GlobalNPC } from './GlobalNPC.js';
 import { ModPlayer } from './ModPlayer.js';
 import { GlobalItem } from './GlobalItem.js';
@@ -78,10 +78,6 @@ for (const namespace in allTypes) {
 	}
 }
 
-export function ModClass_register(namespace, className, classInstance) {
-	addClassToNamespace(CustomClasses, namespace, className, classInstance);
-	globalThis[className] = classInstance;
-}
 
 export function using(...namespaces) {
 	namespaces.forEach(namespace => {
@@ -119,6 +115,10 @@ export function using(...namespaces) {
 	});
 }
 
+export function ModClass_register(namespace, className, classInstance) {
+	addClassToNamespace(CustomClasses, namespace, className, classInstance);
+	globalThis[className] = classInstance;
+}
 // Terraria Path Cause Error
 ModClass_register('Terraria.ID', 'ItemRarityID', ItemRarityID);
 
@@ -130,3 +130,4 @@ ModClass_register('TL', 'GlobalNPC', GlobalNPC);
 ModClass_register('TL', 'ModPlayer', ModPlayer);
 ModClass_register('TL', 'GlobalItem', GlobalItem);
 ModClass_register('TL', 'GlobalProjectile', GlobalProjectile);
+ModClass_register('Harges', 'Harges', HargesApi)
