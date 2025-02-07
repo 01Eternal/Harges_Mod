@@ -12,7 +12,7 @@ import { ItemRarityID } from './Terraria/ID_ItemRarityID.js';
  */
 import { ModItem } from './ModItem.js';
 import { ModProjectile } from './ModProjectile.js';
-import  HargesApi  from '../Harges/Harges.js'
+import HargesApi from '../Harges/Harges.js';
 import { GlobalNPC } from './GlobalNPC.js';
 import { ModPlayer } from './ModPlayer.js';
 import { GlobalItem } from './GlobalItem.js';
@@ -78,7 +78,6 @@ for (const namespace in allTypes) {
 	}
 }
 
-
 export function using(...namespaces) {
 	namespaces.forEach(namespace => {
 		if (NativeClasses[namespace]) {
@@ -130,4 +129,6 @@ ModClass_register('TL', 'GlobalNPC', GlobalNPC);
 ModClass_register('TL', 'ModPlayer', ModPlayer);
 ModClass_register('TL', 'GlobalItem', GlobalItem);
 ModClass_register('TL', 'GlobalProjectile', GlobalProjectile);
-ModClass_register('Harges', 'Harges', HargesApi)
+
+// Harge's API
+ModClass_register('Harges', 'Harges', HargesApi);
