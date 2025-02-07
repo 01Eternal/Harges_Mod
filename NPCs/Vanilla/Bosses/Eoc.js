@@ -3,107 +3,203 @@
 import { using } from '../../../TL/ModClasses.js';
 
 using('Microsoft.Xna.Framework');
-using('Microsoft.Xna.Framework');
 using('TL');
+using('Terraria.ID');
+using('Harges');
 
-const NewProjectile = Projectile['int NewProjectile(IEntitySource spawnSource, Vector2 position, Vector2 velocity, int Type, int Damage, float KnockBack, int Owner, float ai0, float ai1, float ai2)'];
+const { vector2, generic } = Harges;
 
-const vector2 = (x, y) => Vector2.new()['void .ctor(float x, float y)'](x, y);
-const Multiply = Vector2['Vector2 Multiply(Vector2 value1, float scaleFactor)'];
-const Normalize = Vector2['Vector2 Normalize(Vector2 value)'];
-const Subtract = Vector2['Vector2 Subtract(Vector2 value1, Vector2 value2)'];
-
+let arenaTex = null;
 export default class Eoc extends GlobalNPC {
 	constructor() {
 		super();
 	}
 
+	SetStaticDefaults() {
+		arenaTex = tl.texture.load('Assets/AdditiveTextures/HardEdgeRing.png');
+	}
+
 	SetDefaults(npc) {
 		if (npc.type === 4) {
-			npc.life *= 1.15;
-			npc.lifeMax *= 1.15;
-			this.weakDash = null;
-			this.strongDash = null;
+			npc.life *= 0.8;
+			npc.lifeMax *= 0.8;
+
+			this.Phase1Dashing = null;
+			this.Phase2Dashing = null;
 			this.inPhaseTranslation = null;
-			this.inPhase4 = null;
+
+			this.inPhase1 = null; // > 80%
+			this.inPhase2 = null; // 80% to 50%
+
+			this.DisableTranslation = true;
+			this.canAnableTranslation = false;
+
+			this.canSuperDash = false;
+			this.superDashDelay = 0; // 0 to 30
+
+			this.inPhase4 = null; // 40%
+
 			this.RotateDelay = 0;
-			this.RotatePi = 0;
+			this.RotateInPlayerPi = 0;
 			this.NotHaveAlpha = false;
 			this.rotateCount = 1;
-			this.rotateDir = true;
+			this.rotateDirection = true;
 			this.minionSpawnDelay = 0;
+			this.lerpSpeed = 0.1;
+
+			this.finalPhase = false;
+			this.finalPhaseRealTimer = 0;
+			this.finalPhaseIsReal = false;
+			this.finalArenaPosition = null;
+
+			this.finalShoot = 0;
+			this.finalArenaScale = 10;
+			this.canFinalBulletHell = false;
+
+			this.finalArenaRotation = 0;
+		}
+	}
+
+	DrawExtra(npc) {
+		let player = Main.player[Main.myPlayer];
+
+		// ArenaLogic disable the arena if player died.
+		if (Main.player[Main.myPlayer].statLife === 0) return (this.finalPhaseIsReal = false);
+
+		if (this.finalPhaseIsReal) {
+			this.finalShoot++;
+			let arenaScreenPosition = vector2.Subtract(this.finalArenaPosition, Main.screenPosition);
+			let arenaColor = Color.new()['void .ctor(int r, int g, int b, int a)'](255, 0, 0, 0);
+
+			this.finalArenaRotation += Math.random() * 0.35;
+			if (this.finalArenaRotation > Math.PI * 2) this.finalArenaRotation = 0;
+
+			if (this.finalArenaScale > 4) this.finalArenaScale -= 0.2;
+			generic.drawTexture(arenaTex, arenaScreenPosition, arenaColor, this.finalArenaRotation, vector2.getOrigin(arenaTex.Width, arenaTex.Height), this.finalArenaScale);
+
+			const arenaColossion = () => {
+				let arenaRadius = (arenaTex.Width / 2) * this.finalArenaScale * 0.92;
+				let playerDistance = vector2.Distance(player.Center, this.finalArenaPosition);
+
+				if (playerDistance > arenaRadius) {
+					player.AddBuff(BuffID.Obstructed, 2, true, false);
+					player.AddBuff(BuffID.Venom, 2, true, false);
+				} else {
+					player.AddBuff(BuffID.Darkness, 2, true, false);
+				}
+			};
+
+			arenaColossion();
 		}
 	}
 
 	AI(npc) {
 		if (npc.type == 4) {
+			this.phase1 = npc.ai[0] == 0;
+
+			this.inPhase1 = npc.life > npc.lifeMax * 0.8;
+			this.inPhase2 = npc.life < npc.lifeMax * 0.8 && npc.life > npc.lifeMax * 0.5;
+
+			this.inPhase4 = npc.life < npc.lifeMax * 0.4;
+
+			this.Phase1Dashing = npc.ai[1] == 2 && npc.ai[2] == 1;
+			this.Phase2Dashing = npc.ai[1] == 4 && npc.ai[2] == 1;
+			this.inPhaseTranslation = npc.ai[0] == 2 ? true : false;
+
+			if (this.superDashDelay > 0) this.superDashDelay--;
+
 			if (Main.player[Main.myPlayer].statLife === 0) return;
 
-			let damage = 15; // 50
-			const ShootSpikeInAllDirections = (value = 10) => {
-				const Direction = [vector2(value, 0), vector2(-value, 0), vector2(0, value), vector2(0, -value), vector2(-value, -value), vector2(value, value)];
+			let damage = 15;
 
-				Direction.forEach((dir, i) => {
-					NewProjectile(Projectile.GetNoneSource(), npc.Center, dir, ModProjectile.getTypeByName('BloodSpike'), damage, 0, Main.myPlayer, 0, 0, 0);
-				});
+			const MakeRedCircleWarn = (pos = npc.position) => {
+				return generic.NewProjectileSimple(pos, vector2.instance(0, 0), ModProjectile.getTypeByName('RedGlowRing'), 25);
 			};
 
-			const MakeRedCircleWarn = () => {
-				return NewProjectile(Projectile.GetNoneSource(), npc.Center, vector2(0, 0), ModProjectile.getTypeByName('RedGlowRing'), 25, 0, Main.myPlayer, 0, 0, 0);
+			const ShootCone = () => {
+				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * 2, npc.velocity.Y), ModProjectile.getTypeByName('BloodSpike'), damage);
+				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * 2, npc.velocity.Y * 2), ModProjectile.getTypeByName('BloodSpike'), damage);
+				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * 2, npc.velocity.Y / 2), ModProjectile.getTypeByName('BloodSpike'), damage);
 			};
-
-			const ShootFallSpike = (quantity = 3) => {
-				for (let i = 0; i < quantity; i++) {
-					NewProjectile(
-						Projectile.GetNoneSource(),
-						npc.Center,
-						vector2(npc.velocity.X + i * 2 * npc.direction, npc.velocity.Y - 7),
-						ModProjectile.getTypeByName('BloodSpike'),
-						damage,
-						0,
-						Main.myPlayer,
-						0,
-						0,
-						0
-					);
-				}
-			};
-
 			const player = Main.player[npc.target];
 
-			const RotateInPlayer = (distance = 600, speed = 0.1) => {
-				if (!player || player.dead) return;
+			const AI_FinalAtack = () => {
+				if (this.finalArenaPosition === null) this.finalArenaPosition = player.Center;
+				npc.velocity = vector2.instance(0, 0);
 
-				const playerPosition = player.Center;
-
-				if (this.rotateDir == true) {
-					this.RotatePi += speed;
-					if (this.RotatePi > Math.PI * 2) this.RotatePi -= Math.PI * 2;
+				if (this.finalPhaseRealTimer === 1) {
+					MakeRedCircleWarn(this.finalArenaPosition);
 				}
-				if (this.rotateDir == false) {
-					this.RotatePi -= speed;
-					if (this.RotatePi < -Math.PI * 2) this.RotatePi += Math.PI * 2;
+				if (this.finalPhaseRealTimer >= 120) {
+					this.finalPhaseIsReal = true;
+				} else {
+					this.NotHaveAlpha = true;
 				}
 
-				const newX = playerPosition.X + Math.cos(this.RotatePi) * distance;
-				const newY = playerPosition.Y + Math.sin(this.RotatePi) * distance;
-				npc.position = vector2(newX - npc.width / 2, newY - npc.height / 2);
+				if (this.finalPhaseIsReal) {
+					npc.Center = this.finalArenaPosition;
+				}
+
 				npc.ai[1] = 0;
 			};
 
-			if (!this.lastAtack) {
-				this.weakDash = npc.ai[1] == 2 && npc.ai[2] == 1;
-				this.strongDash = npc.ai[1] == 4 && npc.ai[2] == 1;
-				this.inPhaseTranslation = npc.ai[0] == 2 ? true : false;
-				this.inPhase4 = npc.life < npc.lifeMax * 0.4;
+			// disable everying if it's in last phase
+			if (npc.life < npc.lifeMax * 0.2) this.finalPhase = true;
 
-				// Main.NewText(`RotateTime : ${this.RotateTime}\n RotateDelay : ${this.RotateDelay} \n rotateCount : ${this.rotateCount}`, 255, 255, 255);
+			if (this.finalPhase) {
+				this.finalPhaseRealTimer++;
+				AI_FinalAtack();
+			}
 
-				// npc.ai[1]= 2 // Lock he
+			// Phase 1 and 2
+			const EnvironmentDashsAndEffect = () => {
+				/**
+				    @summary Pre phase 1 dash
+				*/
 
-				// Main.NewText(`${this.rotateCount}`, 255, 255, 255);
-				// const phase_3 = npc.ai[0] == 3;
+				let projTime = 30;
+				let dashCount = npc.ai[3];
 
+				// in phase 1 and life > 80
+				const AI_Phase1 = () => {
+					let Phase1Dashing = this.phase1 && npc.ai[2] == 1;
+					let prePhase1Dashing = npc.ai[1] === 0 ? npc.ai[2] == 210 - projTime : npc.ai[2] == 100 - projTime;
+
+					// Pre atack visual
+					if (prePhase1Dashing) MakeRedCircleWarn();
+				};
+
+				const AI_Phase2 = () => {
+					if (this.DisableTranslation == true) {
+						this.canAnableTranslation = true;
+					} else this.canAnableTranslation = false;
+
+					if (this.canAnableTranslation === true) {
+						npc.ai[0] = 1;
+						npc.ai[2] = 0.05;
+						Main.NewText(`called`, 255, 255, 255);
+
+						this.DisableTranslation = false;
+					}
+
+					// Force Strong Dash
+					if (npc.ai[2] === 180) npc.ai[1] = 4;
+
+					// Strong dash projectile
+					if (this.Phase2Dashing) {
+						npc.velocity = vector2.Multiply(npc.velocity, 1.4);
+						MakeRedCircleWarn();
+						ShootCone();
+					}
+				};
+
+				if (this.phase1 && this.inPhase1) AI_Phase1();
+				if (this.inPhase2) AI_Phase2();
+			};
+
+			EnvironmentDashsAndEffect();
+
+			const AlphaLogic = () => {
 				if (this.NotHaveAlpha) {
 					if (npc.alpha < 255) npc.alpha += 2;
 				} else {
@@ -113,126 +209,22 @@ export default class Eoc extends GlobalNPC {
 				// No Black eye : )
 				if (npc.alpha > 255) npc.alpha = 255;
 				if (npc.alpha < 0) npc.alpha = 0;
+			};
 
-				if (this.weakDash) {
-					MakeRedCircleWarn();
+			AlphaLogic();
+		}
+	}
 
-					if (!this.inPhase4) {
-						ShootFallSpike(4);
-					} else {
-					}
-				}
-				if (this.strongDash) {
-					MakeRedCircleWarn();
-					if (!this.inPhase4) {
-						ShootSpikeInAllDirections(15);
-					} else {
-						if (this.rotateCount == 3) {
-							ShootSpikeInAllDirections(15);
-						}
-					}
-				}
-
-				if (this.inPhase4) {
-					const AI_EspecialDashs = () => {
-						if (this.RotateTime > 0) {
-							this.minionSpawnDelay++;
-							if (this.minionSpawnDelay == 30) {
-								this.minionSpawnDelay = 0;
-								NPC.NewNPC(npc.GetSpawnSourceForNPCFromNPCAI(), npc.Center.X, npc.Center.Y, 5, 0, 0, 0, 0, 0, Main.myPlayer);
-							}
-							/**
-							 * @summary Enable The RotateDelay With Velocity And Radius
-							 */
-							const Radius = 400;
-							const Velocity = 0.07; // old 0.05
-							RotateInPlayer(Radius, Velocity);
-
-							/**
-							 * @summary logic for Especial dash And RotateDelay
-							 */
-
-							/**
-							 * @summary Stop Dashs and Time
-							 */
-							npc.ai[2] = 0; // Stop Dash Timer
-							npc.ai[3] = 0; // Stop Dashs (Lock in phase 0)
-
-							/**
-							 * @summary Dash It's In Enabled - 5 Ticks of delay.
-							 */
-							if (this.RotateTime === 5) {
-								this.rotateDir = !this.rotateDir;
-								// MakeRedCircleWarn();
-								// Increment The Special Dashs Counter
-								// this.rotateCount++;
-							}
-
-							this.NotHaveAlpha = true;
-						} else {
-							// if rotate no it's Enabled
-							this.NotHaveAlpha = false;
-							this.RotateDelay++;
-						}
-
-						if (this.rotateCount === 1) {
-							if (npc.ai[2] > 0 && npc.ai[3] === 1) {
-								this.RotateTime = 200;
-								this.rotateCount = 2;
-							}
-						} else if (this.rotateCount === 2) {
-							if (npc.ai[2] > 0 && npc.ai[3] === 2) {
-								ShootFallSpike(6);
-								this.RotateTime = 200;
-								this.rotateCount = 3;
-							}
-						} else if (this.rotateCount === 3) {
-							if (npc.ai[2] > 0 && npc.ai[3] === 3) {
-								this.RotateTime = 200;
-								this.rotateCount = 1;
-							}
-						}
-					};
-
-					AI_EspecialDashs();
-
-					if (this.RotateTime > -1) this.RotateTime--;
-					if (this.RotateTime === 0) npc.ai[2] = 400;
-
-					// Verify if npc dash Timer i bigger of 5 and the boss dash is equal 0
-					if (npc.ai[2] > 5 && npc.ai[3] === 0) {
-						// Main.NewText(`called NPC active rotate`, 255, 255, 255);
-
-						/**
-						 * @summary Every 7 Seconds Start de AI_EspecialDashs()
-						 */
-						if (this.RotateDelay >= 60 * 2) {
-							this.RotateDelay = 0;
-							this.RotateTime = 200;
-						}
-					}
-				} else {
-					/**
-					 * @summary Reset Values else inPhase4
-					 */
-					this.NotHaveAlpha = false;
-					this.RotateDelay = 0;
-					this.RotateTime = 0;
-				}
-
-				if (!this.inPhaseTranslation && !this.weakDash) {
-					// Removed in 1.5 npc.rotation = Utils.ToRotation(Subtract(player.position, npc.Center)) + -Math.PI / 2;
-				}
-			}
+	OnKill(npc) {
+		if (npc.type === 4) {
+			this.finalPhaseIsReal = false;
 		}
 	}
 
 	OnHitPlayer(npc, player) {
 		if (npc.type === 4) {
 			player.AddBuff(BuffID.BrokenArmor, 60 * 15, true, false);
-
-			// Cursed flame 6s => Acid venom 2s
-			player.AddBuff(BuffID.Venom, 30 * 2, true, false); // 30 = 1s
+			player.AddBuff(BuffID.Venom, 30 * 2, true, false);
 			player.AddBuff(BuffID.Obstructed, 60 * 2, true, false);
 		}
 	}
