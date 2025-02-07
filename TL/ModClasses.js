@@ -118,6 +118,7 @@ export function ModClass_register(namespace, className, classInstance) {
 	addClassToNamespace(CustomClasses, namespace, className, classInstance);
 	globalThis[className] = classInstance;
 }
+
 // Terraria Path Cause Error
 ModClass_register('Terraria.ID', 'ItemRarityID', ItemRarityID);
 
