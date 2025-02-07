@@ -4,6 +4,8 @@ import { using } from '../../TL/ModClasses_Inner.js';
 using('Microsoft.Xna.Framework');
 using('Terraria');
 
+export class eternal {}
+
 export class rec {
 	static instance = Rectangle.new('void .ctor(int x, int y, int width, int height');
 }
