@@ -4,7 +4,11 @@ import { using } from '../../TL/ModClasses_Inner.js';
 using('Microsoft.Xna.Framework');
 using('Terraria');
 
-export class eternal {}
+export class eternal {
+	static PlayerBuffWithPenality(buffID = 0, buffTime = 0) {
+		return Main.player[Main.myPlayer].Addbuff(bbuffTime, buffID, true, false);
+	}
+}
 
 export class rec {
 	static instance = Rectangle.new('void .ctor(int x, int y, int width, int height');
