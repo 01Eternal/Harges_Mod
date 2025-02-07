@@ -5,6 +5,7 @@ import { using } from '../../../TL/ModClasses.js';
 using('Microsoft.Xna.Framework');
 using('Microsoft.Xna.Framework');
 using('TL');
+using('Terraria.ID');
 
 const NewProjectile = Projectile['int NewProjectile(IEntitySource spawnSource, Vector2 position, Vector2 velocity, int Type, int Damage, float KnockBack, int Owner, float ai0, float ai1, float ai2)'];
 
@@ -12,6 +13,7 @@ const vector2 = (x, y) => Vector2.new()['void .ctor(float x, float y)'](x, y);
 const Multiply = Vector2['Vector2 Multiply(Vector2 value1, float scaleFactor)'];
 const Normalize = Vector2['Vector2 Normalize(Vector2 value)'];
 const Subtract = Vector2['Vector2 Subtract(Vector2 value1, Vector2 value2)'];
+const Lerp = Vector2['Vector2 Lerp(Vector2 value1, Vector2 value2, float amount)'];
 
 export default class SlimeBoss extends GlobalNPC {
 	constructor() {
@@ -32,7 +34,9 @@ export default class SlimeBoss extends GlobalNPC {
 			this.canSaveSmashPos = true;
 			this.canStomp = false;
 			this.canRainProj = 0;
+			this.canHeadProj = 0;
 			this.canShootProjInAllDir = false;
+			this.FallDir = true;
 		}
 
 		if (npc.type === 535) {
@@ -43,12 +47,15 @@ export default class SlimeBoss extends GlobalNPC {
 
 	AI(npc) {
 		if (npc.type == 50) {
+			// Main.NewText(`${this.FallDir}`, 255, 255, 255);
+
 			this.SpikeRainDelay++;
+			this.canHeadProj++;
 			this.inJump = npc.ai[0] == -15; // -300 to -1
 			this.inSuperJump = npc.ai[2] == 0; // in Big jump
-			this.inPhase2 = npc.life < npc.lifeMax * 0.8;
+		
 
-			const ShootSpikeAllDir = (projID = ModProjectile.getTypeByName('SlimySpike')) => {
+			const ShootSpikeAllDir = (projID = ModProjectile.getTypeByName('FallingSlime')) => {
 				let damage = 10;
 
 				// prettier ignore format
@@ -69,13 +76,16 @@ export default class SlimeBoss extends GlobalNPC {
 			const MakeBlueCircleWarn = (Position = npc.Center) =>
 				NewProjectile(Projectile.GetNoneSource(), Position, vector2(0, 0), ModProjectile.getTypeByName('BlueGlowRing'), 25, 0, Main.myPlayer, 0, 0, 0);
 
-			const ShootFallSpike = (quantity = 3, projID = ModProjectile.getTypeByName('SlimySpike')) => {
-				let damage = 10;
+			const ShootRainHeadSpikes = (quantity = 5, projID = ModProjectile.getTypeByName('FallingSlime')) => {
+				let damage = 17;
 				for (let i = 0; i < quantity; i++) {
 					NewProjectile(
 						Projectile.GetNoneSource(),
-						vector2(Main.player[Main.myPlayer].Center.X - 512 + i * 75, Main.player[Main.myPlayer].Center.Y - 400),
-						vector2(0, 1),
+						vector2(
+							Main.player[Main.myPlayer].Center.X - 40 + Math.random() * 80, //
+							Main.player[Main.myPlayer].Center.Y - 500 + Math.random() * 30
+						),
+						vector2(0, 7),
 						projID,
 						damage,
 						0,
@@ -87,76 +97,98 @@ export default class SlimeBoss extends GlobalNPC {
 				}
 			};
 
+			const ShootFallRainSpikes = (quantity = 3, projID = ModProjectile.getTypeByName('FallingSlime')) => {
+				let damage = 10;
+				for (let i = 0; i < quantity; i++) {
+					NewProjectile(
+						Projectile.GetNoneSource(),
+						vector2(
+							this.FallDir === true ? Main.player[Main.myPlayer].Center.X - 512 + i * 75 : Main.player[Main.myPlayer].Center.X + 512 - i * 75,
+							Main.player[Main.myPlayer].Center.Y - 400 - i * 30
+						),
+						vector2(0, 5),
+						projID,
+						damage,
+						0,
+						Main.myPlayer,
+						0,
+						0,
+						0
+					);
+				}
+			};
 			const SimpleAI = () => {
 				/**
-                    @summary make 14 spikes in sky
-                */
-				if (this.SpikeRainDelay % 200 === 0) ShootFallSpike(14);
+                @summary make 14 spikes in sky
+            */
+				if (this.canHeadProj % 300 === 0) ShootRainHeadSpikes(5, ModProjectile.getTypeByName('SlimySpike'))
+
+				if (this.SpikeRainDelay % 200 === 0) ShootFallRainSpikes(14);
 				/**
-				     @summary make spike in all direction in Jump
-				 */
+			     @summary make spike in all direction in Jump
+			 */
 				if (this.inJump) {
 					ShootSpikeAllDir();
 				}
 
 				/**
-				    @summary Make a Blue circle glow to see Pre Jump
-				*/
+			    @summary Make a Blue circle glow to see Pre Jump
+			*/
 
 				/*REMOVED 		if (npc.ai[0] <= -60 || this.inSuperJump) {
-					// perfect pre Jump.
-					if (this.preJump === false) {
-						MakeBlueCircleWarn();
-						this.preJump = true;
-					}
-				} else this.preJump = false; // Reset if no it's in Jump.
-				*/
+				// perfect pre Jump.
+				if (this.preJump === false) {
+					MakeBlueCircleWarn();
+					this.preJump = true;
+				}
+			} else this.preJump = false; // Reset if no it's in Jump.
+			*/
 			};
-
 			const SmashJump = () => {
 				this.canRainProj--;
 				Math.abs(this.canRainProj);
 				this.smashJumpDelay++;
 
-				let Distance = 400; //px
-
+				let Distance = 300;
 				let PrePos = vector2(Main.player[0].position.X, Main.player[0].position.Y - Distance);
 
 				if (this.canSaveSmashPos) {
 					this.SmashPos = PrePos;
 				}
 
-				// Main.NewText(`${this.smashJumpDelay}`, 255, 255, 255);
-
 				if (this.smashJumpDelay === 360) MakeBlueCircleWarn(this.SmashPos);
 
 				if (this.smashJumpDelay > 360) {
-					npc.ai[0] = -150;
-					this.canSaveSmashPos = false;
-				} else this.canSaveSmashPos = true;
+					let moveDirection = Normalize(Subtract(this.SmashPos, npc.position));
+					let speed = 25;
+					npc.velocity = Multiply(moveDirection, speed);
 
-				if (this.smashJumpDelay === 400) {
-					npc.position = this.SmashPos;
-					this.smashJumpDelay = 0;
-					npc.velocity = vector2(npc.velocity.X, npc.velocity.Y + 8000);
-					this.canStomp = true;
+					if (Math.abs(npc.position.X - this.SmashPos.X) < 10 && Math.abs(npc.position.Y - this.SmashPos.Y) < 10) {
+						this.smashJumpDelay = 0;
+						this.canStomp = true;
+						this.FallDir = !this.FallDir;
+					}
 				}
 
 				if (this.canStomp === true) {
-					npc.velocity = vector2(0, npc.velocity.Y * 1.2);
-					// npc.ai[0] = -1000
+					npc.velocity = vector2(0, npc.velocity.Y < 0 ? -npc.velocity.Y : npc.velocity.Y);
 					if (npc.velocity.Y === 0) {
-						ShootFallSpike(14);
+						ShootFallRainSpikes(14);
 						this.canStomp = false;
+						this.smashJumpDelay = 0;
+						this.canSaveSmashPos = true;
 					}
 				}
 			};
+			
+			
+                SimpleAI();
+			    if (npc.life < npc.lifeMax * 0.8 ) SmashJump();
 
-			if (this.inPhase2) SmashJump();
 			// if (this.inPhase2) {
 			// 					Main.NewText(`Called`, 255, 255, 255);
 			// 				}
-			SimpleAI();
+			
 		}
 	}
 
