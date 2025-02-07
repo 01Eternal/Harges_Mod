@@ -6,7 +6,6 @@ using('Terraria');
 
 export class rec {
 	static instance = Rectangle.new('void .ctor(int x, int y, int width, int height');
-	static getOrigin;
 }
 export class vec2 {
 	static instance = Vector2.new()['void .ctor(float x, float y)'];
