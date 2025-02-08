@@ -22,9 +22,7 @@ import { ProjectileLoader } from './Loaders/ProjectileLoader.js';
 const Main = Terraria.Main;
 
 const EntitySpriteDraw =
-	Main[
-		'void EntitySpriteDraw(Texture2D texture, Vector2 position, Rectangle sourceRectangle, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float worthless)'
-	];
+	Main['void EntitySpriteDraw(Texture2D texture, Vector2 position, Rectangle sourceRectangle, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float worthless)'];
 const v_Subtract = Microsoft.Xna.Framework.Vector2['Vector2 Subtract(Vector2 value1, Vector2 value2)'];
 const Frame = Terraria.Utils['Rectangle Frame(Texture2D tex, int horizontalFrames, int verticalFrames, int frameX, int frameY, int sizeOffsetX, int sizeOffsetY)'];
 
@@ -66,12 +64,12 @@ export class ModHooks {
 					if (Proj.type === projID) ProjectileLoader.OnHitPlayer(Proj, self, 0, 0);
 				});
 			}
-			
-			let npcID = damageSource._sourceNPCIndex
+
+			let npcID = damageSource._sourceNPCIndex;
 			if (npcID > 0) {
-			    NPCLoader.OnHitPlayer(Main.npc[npcID], self)
+				NPCLoader.OnHitPlayer(Main.npc[npcID], self);
 			}
-			
+
 			/*if (id > 0) {
 				let projectile = Main.projectile[id];
 				Main.NewText(`ProjType? : ${projectile.type}`, 255, 255, 255);
@@ -1064,16 +1062,18 @@ export class ModHooks {
 		Terraria.Main.DrawProjDirect.hook((original, self, proj, i) => {
 			let mountedCenter = Main.player[proj.owner].MountedCenter;
 			let LightColor = Lighting['Color GetColor(int x, int y)'](mountedCenter.X / 16, mountedCenter.Y / 16);
-			original(self, proj, i);
+		//
 			if (!ProjectileLoader.PreDraw(proj, LightColor)) return;
-			ProjectileLoader.Draw(proj, LightColor);
+				original(self, proj, i);
+			// ProjectileLoader.Draw(proj, LightColor);
 		});
 
 		Terraria.Main.Initialize_AlmostEverything.hook((original, self) => {
 			original(self);
 			ItemLoader.InitializeRegisteredItems();
 			ProjectileLoader.InitializeRegisteredProjectile();
-
+            NPCLoader.SetStaticDefaults();
+            
 			ProjectileLoader.RegisteredProjectile.forEach(projectile => {
 				const texturePath = projectile.Texture || `Projectiles/${projectile.constructor.name}`;
 				ModHooks.tmp_tex[projectile.constructor.name] = new ModTexture(texturePath);
@@ -1610,21 +1610,12 @@ export class ModHooks {
 					self.statLife++;
 					if (self.crimsonRegen) {
 						for (let i = 0; i < 10; i++) {
-							let num9 = Terraria.Dust.NewDust(
-								self.position,
-								self.width,
-								self.height,
-								5,
-								0,
-								0,
-								175,
-								Microsoft.Xna.Framework.Graphics.Color.new(),
-								1.75
-							);
+							let num9 = Terraria.Dust.NewDust(self.position, self.width, self.height, 5, 0, 0, 175, Microsoft.Xna.Framework.Graphics.Color.new(), 1.75);
 							Terraria.Main.dust[num9].noGravity = true;
-							Terraria.Main.dust[num9].velocity = Microsoft.Xna.Framework.Vector2[
-								'Vector2 op_Multiply(Vector2 value, float scaleFactor)'
-							](Main.dust[num9].velocity, 0.75);
+							Terraria.Main.dust[num9].velocity = Microsoft.Xna.Framework.Vector2['Vector2 op_Multiply(Vector2 value, float scaleFactor)'](
+								Main.dust[num9].velocity,
+								0.75
+							);
 							let num10 = Terraria.Main.rand['int Next(int minValue, int maxValue)'](-40, 41);
 							let num11 = Terraria.Main.rand['int Next(int minValue, int maxValue)'](-40, 41);
 							Terraria.Main.dust[num9].position.X += num10;
@@ -1649,13 +1640,7 @@ export class ModHooks {
 					rect.Y = self.position.Y;
 					rect.Width = self.width;
 					rect.Height = self.height;
-					Terraria.CombatText['int NewText(Rectangle location, Color color, int amount, bool dramatic, bool dot)'](
-						rect,
-						Terraria.CombatText.LifeRegen,
-						5,
-						false,
-						true
-					);
+					Terraria.CombatText['int NewText(Rectangle location, Color color, int amount, bool dramatic, bool dot)'](rect, Terraria.CombatText.LifeRegen, 5, false, true);
 					if (self.statLife <= 0 && self.whoAmI === Terraria.Main.myPlayer) {
 						if (self.suffocating) {
 							self.KillMe(Terraria.DataStructures.PlayerDeathReason.ByOther(7), 10.0, 0, false);
@@ -1708,13 +1693,7 @@ export class ModHooks {
 					rect.Y = self.position.Y;
 					rect.Width = self.width;
 					rect.Height = self.height;
-					Terraria.CombatText['int NewText(Rectangle location, Color color, int amount, bool dramatic, bool dot)'](
-						rect,
-						Terraria.CombatText.LifeRegen,
-						4,
-						false,
-						true
-					);
+					Terraria.CombatText['int NewText(Rectangle location, Color color, int amount, bool dramatic, bool dot)'](rect, Terraria.CombatText.LifeRegen, 4, false, true);
 				} else if (self.lifeRegenCount <= -360) {
 					self.lifeRegenCount += 360;
 					self.statLife -= 3;
@@ -1723,13 +1702,7 @@ export class ModHooks {
 					rect.Y = self.position.Y;
 					rect.Width = self.width;
 					rect.Height = self.height;
-					Terraria.CombatText['int NewText(Rectangle location, Color color, int amount, bool dramatic, bool dot)'](
-						rect,
-						Terraria.CombatText.LifeRegen,
-						3,
-						false,
-						true
-					);
+					Terraria.CombatText['int NewText(Rectangle location, Color color, int amount, bool dramatic, bool dot)'](rect, Terraria.CombatText.LifeRegen, 3, false, true);
 				} else if (self.lifeRegenCount <= -240) {
 					self.lifeRegenCount += 240;
 					self.statLife -= 2;
@@ -1738,13 +1711,7 @@ export class ModHooks {
 					rect.Y = self.position.Y;
 					rect.Width = self.width;
 					rect.Height = self.height;
-					Terraria.CombatText['int NewText(Rectangle location, Color color, int amount, bool dramatic, bool dot)'](
-						rect,
-						Terraria.CombatText.LifeRegen,
-						2,
-						false,
-						true
-					);
+					Terraria.CombatText['int NewText(Rectangle location, Color color, int amount, bool dramatic, bool dot)'](rect, Terraria.CombatText.LifeRegen, 2, false, true);
 				} else {
 					self.lifeRegenCount += 120;
 					self.statLife--;
@@ -1753,13 +1720,7 @@ export class ModHooks {
 					rect.Y = self.position.Y;
 					rect.Width = self.width;
 					rect.Height = self.height;
-					Terraria.CombatText['int NewText(Rectangle location, Color color, int amount, bool dramatic, bool dot)'](
-						rect,
-						Terraria.CombatText.LifeRegen,
-						1,
-						false,
-						true
-					);
+					Terraria.CombatText['int NewText(Rectangle location, Color color, int amount, bool dramatic, bool dot)'](rect, Terraria.CombatText.LifeRegen, 1, false, true);
 				}
 
 				if (self.statLife <= 0 && self.whoAmI === Terraria.Main.myPlayer) {
@@ -1918,9 +1879,18 @@ export class ModHooks {
 
 			if (result.type > 0 && result.stack > 0) {
 				const position = self.Center;
-				Terraria.Item[
-					'int NewItem(int X, int Y, int Width, int Height, int Type, int Stack, bool noBroadcast, int pfix, bool noGrabDelay, bool reverseLookup)'
-				](position.X, position.Y, 1, 1, result.type, result.stack, false, -1, false, false);
+				Terraria.Item['int NewItem(int X, int Y, int Width, int Height, int Type, int Stack, bool noBroadcast, int pfix, bool noGrabDelay, bool reverseLookup)'](
+					position.X,
+					position.Y,
+					1,
+					1,
+					result.type,
+					result.stack,
+					false,
+					-1,
+					false,
+					false
+				);
 			}
 		});
 
@@ -1993,8 +1963,7 @@ export class ModHooks {
 				for (let i = 0; i < 58; i++) {
 					const inventory = self.inventory[i];
 					if (
-						(inventory.type < ItemLoader.MAX_VANILLA_ID ||
-							(inventory.type >= ItemLoader.MAX_VANILLA_ID && CombinedLoader.CanUseItem(self, inventory))) &&
+						(inventory.type < ItemLoader.MAX_VANILLA_ID || (inventory.type >= ItemLoader.MAX_VANILLA_ID && CombinedLoader.CanUseItem(self, inventory))) &&
 						inventory.mountType !== -1 &&
 						!Terraria.ID.MountID.Sets.Cart[inventory.mountType]
 					) {
@@ -2021,10 +1990,7 @@ export class ModHooks {
 						Terraria.Mount.SetMount(self.mount, item.mountType, self, false);
 						ItemLoader.UseItem(item, self);
 						if (item.UseSound !== null) {
-							Terraria.Audio.SoundEngine['SoundEffectInstance PlaySound(LegacySoundStyle type, Vector2 position)'](
-								item.UseSound,
-								self.Center
-							);
+							Terraria.Audio.SoundEngine['SoundEffectInstance PlaySound(LegacySoundStyle type, Vector2 position)'](item.UseSound, self.Center);
 						}
 					}
 				} else {
@@ -2097,9 +2063,18 @@ export class ModHooks {
 			item.position = self.Center;
 			const item2 = self.GetItem(self.whoAmI, item, Terraria.GetItemSettings.NPCEntityToPlayerInventorySettings, false);
 			if (item2.stack > 0) {
-				Terraria.Item[
-					'int NewItem(int X, int Y, int Width, int Height, int Type, int Stack, bool noBroadcast, int pfix, bool noGrabDelay, bool reverseLookup)'
-				](self.position.X, self.position.Y, self.width, self.height, item2.type, item2.stack, false, 0, true, false);
+				Terraria.Item['int NewItem(int X, int Y, int Width, int Height, int Type, int Stack, bool noBroadcast, int pfix, bool noGrabDelay, bool reverseLookup)'](
+					self.position.X,
+					self.position.Y,
+					self.width,
+					self.height,
+					item2.type,
+					item2.stack,
+					false,
+					0,
+					true,
+					false
+				);
 			}
 		});
 
@@ -2115,9 +2090,18 @@ export class ModHooks {
 			for (let i = 0; i < rewardItems.length; i++) {
 				const getItem = self.GetItem(self.whoAmI, rewardItems[i], Terraria.GetItemSettings.NPCEntityToPlayerInventorySettings, false);
 				if (getItem.stack > 0) {
-					Terraria.Item[
-						'int NewItem(int X, int Y, int Width, int Height, int Type, int Stack, bool noBroadcast, int pfix, bool noGrabDelay, bool reverseLookup)'
-					](self.position.X, self.position.Y, self.width, self.height, getItem.type, getItem.stack, false, 0, true, false);
+					Terraria.Item['int NewItem(int X, int Y, int Width, int Height, int Type, int Stack, bool noBroadcast, int pfix, bool noGrabDelay, bool reverseLookup)'](
+						self.position.X,
+						self.position.Y,
+						self.width,
+						self.height,
+						getItem.type,
+						getItem.stack,
+						false,
+						0,
+						true,
+						false
+					);
 				}
 			}
 		});
@@ -2341,9 +2325,7 @@ export class ModHooks {
 			original(self);
 
 			ProjectileLoader.Kill(self, TimeLeft);
-			if ((ModHooks.ProjSpawned = true)) {
-				ModHooks.ProjSpawned = false;
-			}
+			
 		});
 
 		Terraria.Player.GetItemGrabRange.hook((original, self, item) => {
@@ -2369,6 +2351,17 @@ export class ModHooks {
 
 		Main.DrawRain.hook((original, self) => {
 			original(self);
+
+			let player = Main.player[0];
+			let item = player.HeldItem;
+
+			if (player.statLife !== 0) {
+				if (item.type !== 0) {
+					ItemLoader.DrawHeldItem(item, player);
+				}
+			}
+			
+			        NPCLoader.DrawExtra()
 		});
 
 		ModHooks.isInitialized = true;
