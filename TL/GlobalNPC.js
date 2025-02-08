@@ -12,6 +12,10 @@ export class GlobalNPC {
 
     SetDefaults(npc) {
     }
+    
+    SetStaticDefaults() {
+    
+    }
 
     AI(npc){
     }
@@ -27,6 +31,10 @@ export class GlobalNPC {
     }
     
     NPCLoot(npc) {
+    }
+    
+    DrawExtra(npc) {
+    
     }
 
     ModifyNPCLoot(npcLoot) {
