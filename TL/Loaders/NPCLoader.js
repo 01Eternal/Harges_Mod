@@ -33,6 +33,18 @@ export class NPCLoader {
     constructor() {
     }
     
+    static SetStaticDefaults() {
+        for (let gNPC of GlobalNPC.RegisteredNPC) {
+            gNPC.SetStaticDefaults();
+        }
+    }
+    
+    static DrawExtra(npc) {
+        for (let gNPC of GlobalNPC.RegisteredNPC) {
+            gNPC.DrawExtra();
+        }
+    }
+    
     static SetDefaults(npc) {
         for (let gNPC of GlobalNPC.RegisteredNPC) {
             gNPC.SetDefaults(npc);
