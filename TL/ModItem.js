@@ -48,6 +48,10 @@ export class ModItem extends ModTexturedType {
     UpdateEquip(player) {
 
     }
+    
+    DrawHeldItem(player) {
+        
+    }
 
     UpdateInventory(player) {
 
