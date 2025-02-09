@@ -117,13 +117,34 @@ export default class Eoc extends GlobalNPC {
 			};
 
 			const ShootCone = () => {
-				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * 0.5, npc.velocity.Y), ModProjectile.getTypeByName('BloodSpike'), damage);
-				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * 0.5, npc.velocity.Y * 4), ModProjectile.getTypeByName('BloodSpike'), damage);
-				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * 0.5, npc.velocity.Y / 4), ModProjectile.getTypeByName('BloodSpike'), damage);
+				let multiplier = 0.3;
+				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * multiplier, npc.velocity.Y), ModProjectile.getTypeByName('BloodSpike'), damage);
+				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * multiplier, npc.velocity.Y * 4), ModProjectile.getTypeByName('BloodSpike'), damage);
+				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * multiplier, npc.velocity.Y / 4), ModProjectile.getTypeByName('BloodSpike'), damage);
+			};
+
+			const ShootCrossBloodBloodScythe = () => {
+				let vel = 0.3;
+				let digVel = vel / 2; // diagonal velocity.
+				const allDir = [
+					vector2.instance(vel, 0), //
+					vector2.instance(-vel, 0), //
+					vector2.instance(0, vel), //
+					vector2.instance(0, -vel), //
+					vector2.instance(digVel, digVel), //
+					vector2.instance(-digVel, digVel), //
+					vector2.instance(digVel, -digVel), //
+					vector2.instance(-digVel, -digVel) //
+				];
+
+				allDir.forEach(allDir => {
+					generic.NewProjectileSimple(npc.Center, allDir, ModProjectile.getTypeByName('BloodScythe'), damage);
+				});
 			};
 			const player = Main.player[npc.target];
 
 			const ExplosionEffect = () => {
+				ShootCrossBloodBloodScythe();
 				for (let i = 0; i < 75; i++) {
 					let ex = Dust.NewDust(dustPos, npc.width, npc.height, 90, 0, 0, 100, color.instance(), 1 + i * 0.05);
 					Main.dust[ex].noGravity = true;
@@ -173,7 +194,9 @@ export default class Eoc extends GlobalNPC {
 				let dashing = npc.ai[2] == 1;
 
 				if (dashing) ExplosionEffect();
-				if (Phase1Dashing) npc.velocity = vector2.Multiply(npc.velocity, 3);
+				if (Phase1Dashing) {
+					npc.velocity = vector2.Multiply(npc.velocity, 3);
+				}
 				// in phase 1 and life > 80
 				const AI_Phase1 = () => {
 					let prePhase1Dashing = npc.ai[1] === 0 ? npc.ai[2] == 210 - projTime : npc.ai[2] == 100 - projTime;
@@ -201,6 +224,7 @@ export default class Eoc extends GlobalNPC {
 					if (this.Phase2Dashing) {
 						npc.velocity = vector2.Multiply(npc.velocity, 1.4);
 						MakeRedCircleWarn();
+
 						ShootCone();
 					}
 				};
@@ -240,5 +264,20 @@ export default class Eoc extends GlobalNPC {
 			player.AddBuff(BuffID.Venom, 30 * 2, true, false);
 			player.AddBuff(BuffID.Obstructed, 60 * 2, true, false);
 		}
+	}
+	PreDrawMod(Projectile, lightColor) {
+		const screenPosition = Main.screenPosition;
+		const tex = TextureAssets.Projectile[Projectile.type].Value;
+		const texWidth = tex.Width;
+		const texHeight = tex.Height;
+
+		const pos = vector2.Subtract(Projectile.Center, screenPosition);
+		// const truePos = Vector2_new(pos.X - texWidth / 2, pos.Y - texHeight / 2);
+		const pivot = vector2.instance(texWidth / 2, texHeight / 2);
+
+		Main.spriteBatch[
+			'void Draw(Texture2D texture, Vector2 position, Nullable`1 sourceRectangle, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth)'
+		](tex, pos, null, Color.Red, Projectile.rotation, pivot, Projectile.scale * 0.5, null, 0.0);
+		return false 
 	}
 }
