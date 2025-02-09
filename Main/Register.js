@@ -18,7 +18,7 @@ import KingSlime from '../NPCs/Vanilla/Bosses/SlimeBoss.js';
 // dont crash please GOOOOOD
 import Slimy_Spike from '../Projectiles/Eternal/SlimySpike.js';
 import Falling_Slime from '../Projectiles/Eternal/FallingSlime.js';
-import Blood_Knife from '../Projectiles/Eternal/BloodKnife.js';
+import Blood_Scythe from '../Projectiles/Eternal/BloodScythe.js';
 import Blood_Shuriken from '../Projectiles/Eternal/BloodSpike.js';
 
 import Slimes_Rework from '../NPCs/Vanilla/Slimes.js'
@@ -54,5 +54,5 @@ function projectiles() {
 	ModProjectile.register(Slimy_Spike)
 	
 	ModProjectile.register(Blood_Shuriken);
-	ModProjectile.register(Blood_Knife)
+	ModProjectile.register(Blood_Scythe)
 }
