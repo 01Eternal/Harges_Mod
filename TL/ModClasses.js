@@ -10,15 +10,23 @@ import { ItemRarityID } from './Terraria/ID_ItemRarityID.js';
 /**
  * ModdedClasses
  */
+
 import { ModItem } from './ModItem.js';
 import { ModProjectile } from './ModProjectile.js';
-import HargesApi from '../Harges/Harges.js';
+// import HargesApi from '../Harges/Harges.js';
 import { GlobalNPC } from './GlobalNPC.js';
 import { ModPlayer } from './ModPlayer.js';
 import { GlobalItem } from './GlobalItem.js';
 import { GlobalProjectile } from './GlobalProjectile.js';
-
 import { ModTexture } from './ModTexture.js';
+// TL Classes END
+
+/**
+ * HargesClasses
+ */
+
+import { vec2, rec, color } from '../Harges/Utils/MicrosoftUtils.js';
+import { generic } from '../Harges/Utils/VoidUtils.js';
 
 const AppDomain = new NativeClass('System', 'AppDomain');
 const Assembly = new NativeClass('System.Reflection', 'Assembly');
@@ -132,4 +140,8 @@ ModClass_register('TL', 'GlobalItem', GlobalItem);
 ModClass_register('TL', 'GlobalProjectile', GlobalProjectile);
 
 // Harge's API
-ModClass_register('Harges', 'Harges', HargesApi);
+// ModClass_register('Harges', 'Harges', HargesApi);
+ModClass_register('Harges', 'vector2', vec2);
+ModClass_register('Harges', 'color', color);
+ModClass_register('Harges', 'rectangle', rec);
+ModClass_register('Harges', 'generic', generic);
