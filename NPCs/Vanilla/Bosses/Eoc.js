@@ -71,7 +71,6 @@ export default class Eoc extends GlobalNPC {
 		let arenaScreenPosition = vector2.Subtract(this.finalArenaPosition, Main.screenPosition);
 		let arenaColor = color.instance(255, 0, 0, 255);
 
-		if (this.finalArenaScale > 3) this.finalArenaScale -= 0.005;
 		this.finalArenaRotation += Math.random() * 0.35;
 		if (this.finalArenaRotation > Math.PI * 2) this.finalArenaRotation = 0;
 
@@ -109,6 +108,7 @@ export default class Eoc extends GlobalNPC {
 
 			if (Main.player[Main.myPlayer].statLife === 0) return;
 			this.finalArenaPosition = npc.Center;
+			if (this.finalArenaScale > 3.3) this.finalArenaScale -= 0.000625;
 
 			let damage = 15;
 
@@ -117,14 +117,14 @@ export default class Eoc extends GlobalNPC {
 			};
 
 			const ShootCone = () => {
-				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * 2, npc.velocity.Y), ModProjectile.getTypeByName('BloodSpike'), damage);
-				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * 2, npc.velocity.Y * 2), ModProjectile.getTypeByName('BloodSpike'), damage);
-				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * 2, npc.velocity.Y / 2), ModProjectile.getTypeByName('BloodSpike'), damage);
+				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * 0.5, npc.velocity.Y), ModProjectile.getTypeByName('BloodSpike'), damage);
+				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * 0.5, npc.velocity.Y * 4), ModProjectile.getTypeByName('BloodSpike'), damage);
+				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * 0.5, npc.velocity.Y / 4), ModProjectile.getTypeByName('BloodSpike'), damage);
 			};
 			const player = Main.player[npc.target];
 
 			const ExplosionEffect = () => {
-				for (let i = 0; i < 100; i++) {
+				for (let i = 0; i < 75; i++) {
 					let ex = Dust.NewDust(dustPos, npc.width, npc.height, 90, 0, 0, 100, color.instance(), 1 + i * 0.05);
 					Main.dust[ex].noGravity = true;
 				}
@@ -173,7 +173,7 @@ export default class Eoc extends GlobalNPC {
 				let dashing = npc.ai[2] == 1;
 
 				if (dashing) ExplosionEffect();
-				if (Phase1Dashing) npc.velocity = vector2.Multiply(npc.velocity, 2);
+				if (Phase1Dashing) npc.velocity = vector2.Multiply(npc.velocity, 3);
 				// in phase 1 and life > 80
 				const AI_Phase1 = () => {
 					let prePhase1Dashing = npc.ai[1] === 0 ? npc.ai[2] == 210 - projTime : npc.ai[2] == 100 - projTime;
