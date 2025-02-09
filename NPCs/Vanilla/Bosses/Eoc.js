@@ -7,7 +7,7 @@ using('TL');
 using('Terraria.ID');
 using('Harges');
 
-const { vector2, generic } = Harges;
+// onst { vector2, generic } = Harges;
 
 let arenaTex = null;
 export default class Eoc extends GlobalNPC {
@@ -65,32 +65,30 @@ export default class Eoc extends GlobalNPC {
 
 		// ArenaLogic disable the arena if player died.
 		if (Main.player[Main.myPlayer].statLife === 0) return (this.finalPhaseIsReal = false);
+		if (this.finalArenaPosition == null) return;
+		// if (this.finalPhaseIsReal) {
+		this.finalShoot++;
+		let arenaScreenPosition = vector2.Subtract(this.finalArenaPosition, Main.screenPosition);
+		let arenaColor = color.instance(255, 0, 0, 255);
 
-		if (this.finalPhaseIsReal) {
-			this.finalShoot++;
-			let arenaScreenPosition = vector2.Subtract(this.finalArenaPosition, Main.screenPosition);
-			let arenaColor = Color.new()['void .ctor(int r, int g, int b, int a)'](255, 0, 0, 0);
+		if (this.finalArenaScale > 3) this.finalArenaScale -= 0.005;
+		this.finalArenaRotation += Math.random() * 0.35;
+		if (this.finalArenaRotation > Math.PI * 2) this.finalArenaRotation = 0;
 
-			this.finalArenaRotation += Math.random() * 0.35;
-			if (this.finalArenaRotation > Math.PI * 2) this.finalArenaRotation = 0;
+		generic.drawTexture(arenaTex, arenaScreenPosition, color.instance(255, 0, 0, 0), this.finalArenaRotation, vector2.getOrigin(arenaTex.Width, arenaTex.Height), this.finalArenaScale);
 
-			if (this.finalArenaScale > 4) this.finalArenaScale -= 0.2;
-			generic.drawTexture(arenaTex, arenaScreenPosition, arenaColor, this.finalArenaRotation, vector2.getOrigin(arenaTex.Width, arenaTex.Height), this.finalArenaScale);
+		const arenaColossion = () => {
+			let arenaRadius = (arenaTex.Width / 2) * this.finalArenaScale * 0.92;
+			let playerDistance = vector2.Distance(player.Center, this.finalArenaPosition);
 
-			const arenaColossion = () => {
-				let arenaRadius = (arenaTex.Width / 2) * this.finalArenaScale * 0.92;
-				let playerDistance = vector2.Distance(player.Center, this.finalArenaPosition);
-
-				if (playerDistance > arenaRadius) {
-					player.AddBuff(BuffID.Obstructed, 2, true, false);
-					player.AddBuff(BuffID.Venom, 2, true, false);
-				} else {
-					player.AddBuff(BuffID.Darkness, 2, true, false);
-				}
-			};
-
-			arenaColossion();
-		}
+			if (playerDistance > arenaRadius) {
+				player.AddBuff(BuffID.Obstructed, 2, true, false);
+				player.AddBuff(BuffID.Venom, 2, true, false);
+			} else {
+				player.AddBuff(BuffID.Darkness, 2, true, false);
+			}
+		};
+		arenaColossion();
 	}
 
 	AI(npc) {
@@ -106,9 +104,11 @@ export default class Eoc extends GlobalNPC {
 			this.Phase2Dashing = npc.ai[1] == 4 && npc.ai[2] == 1;
 			this.inPhaseTranslation = npc.ai[0] == 2 ? true : false;
 
+			let dustPos = vector2.instance(npc.Center.X - npc.width / 2, npc.Center.Y - npc.height / 2);
 			if (this.superDashDelay > 0) this.superDashDelay--;
 
 			if (Main.player[Main.myPlayer].statLife === 0) return;
+			this.finalArenaPosition = npc.Center;
 
 			let damage = 15;
 
@@ -123,6 +123,12 @@ export default class Eoc extends GlobalNPC {
 			};
 			const player = Main.player[npc.target];
 
+			const ExplosionEffect = () => {
+				for (let i = 0; i < 100; i++) {
+					let ex = Dust.NewDust(dustPos, npc.width, npc.height, 90, 0, 0, 100, color.instance(), 1 + i * 0.05);
+					Main.dust[ex].noGravity = true;
+				}
+			};
 			const AI_FinalAtack = () => {
 				if (this.finalArenaPosition === null) this.finalArenaPosition = player.Center;
 				npc.velocity = vector2.instance(0, 0);
@@ -149,6 +155,8 @@ export default class Eoc extends GlobalNPC {
 			if (this.finalPhase) {
 				this.finalPhaseRealTimer++;
 				AI_FinalAtack();
+			} else {
+				this.finalArenaPosition = npc.Center;
 			}
 
 			// Phase 1 and 2
@@ -157,14 +165,18 @@ export default class Eoc extends GlobalNPC {
 				    @summary Pre phase 1 dash
 				*/
 
+				Dust.NewDust(dustPos, npc.width, npc.height, 90, 0, 0, 100, color.instance(), 1);
+
 				let projTime = 30;
 				let dashCount = npc.ai[3];
+				let Phase1Dashing = npc.ai[2] == 1 && npc.ai[1] == 2;
+				let dashing = npc.ai[2] == 1;
 
+				if (dashing) ExplosionEffect();
+				if (Phase1Dashing) npc.velocity = vector2.Multiply(npc.velocity, 2);
 				// in phase 1 and life > 80
 				const AI_Phase1 = () => {
-					let Phase1Dashing = this.phase1 && npc.ai[2] == 1;
 					let prePhase1Dashing = npc.ai[1] === 0 ? npc.ai[2] == 210 - projTime : npc.ai[2] == 100 - projTime;
-
 					// Pre atack visual
 					if (prePhase1Dashing) MakeRedCircleWarn();
 				};
@@ -177,8 +189,8 @@ export default class Eoc extends GlobalNPC {
 					if (this.canAnableTranslation === true) {
 						npc.ai[0] = 1;
 						npc.ai[2] = 0.05;
-						Main.NewText(`called`, 255, 255, 255);
 
+						ExplosionEffect();
 						this.DisableTranslation = false;
 					}
 
@@ -218,6 +230,7 @@ export default class Eoc extends GlobalNPC {
 	OnKill(npc) {
 		if (npc.type === 4) {
 			this.finalPhaseIsReal = false;
+			this.finalArenaPosition = null;
 		}
 	}
 
