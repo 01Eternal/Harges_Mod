@@ -6,7 +6,7 @@ using('Microsoft.Xna.Framework');
 using('Terraria.ID');
 using('TL');
 using('Harges');
-const { vector2, generic } = Harges;
+// const { vector2, generic } = Harges;
 
 export default class SlimeBoss extends GlobalNPC {
 	constructor() {
