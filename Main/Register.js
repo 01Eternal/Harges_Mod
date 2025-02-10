@@ -18,12 +18,9 @@ import KingSlime from '../NPCs/Vanilla/Bosses/SlimeBoss.js';
 // dont crash please GOOOOOD
 import Slimy_Spike from '../Projectiles/Eternal/SlimySpike.js';
 import Falling_Slime from '../Projectiles/Eternal/FallingSlime.js';
-import Blood_Scythe from '../Projectiles/Eternal/BloodScythe.js';
-import Blood_Shuriken from '../Projectiles/Eternal/BloodSpike.js';
 
 import Slimes_Rework from '../NPCs/Vanilla/Slimes.js'
-import EyeOfChuthulho from '../NPCs/Vanilla/Bosses/Eoc.js';
-import Eye_Lighting from '../Projectiles/Eternal/BloodSpike.js';
+import EyeOfChuthulho from '../NPCs/Vanilla/Bosses/EOC/AI.js';
 
 // =============================================================================================
 
@@ -35,7 +32,6 @@ export function Register() {
 }
 
 function NPCs() {
-
     GlobalNPC.register(Slimes_Rework)
 	GlobalNPC.register(EyeOfChuthulho);
 	GlobalNPC.register(KingSlime);
@@ -53,6 +49,4 @@ function projectiles() {
 	ModProjectile.register(Falling_Slime)
 	ModProjectile.register(Slimy_Spike)
 	
-	ModProjectile.register(Blood_Shuriken);
-	ModProjectile.register(Blood_Scythe)
 }
