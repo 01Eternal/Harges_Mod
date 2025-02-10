@@ -503,6 +503,11 @@ static register2(items) {
 
         ModItem.getModItem(item.type)?.UpdateEquip(player);
     }
+    
+    static DrawHeldItem(item, player) {
+        ModItem.getModItem(item.type)?.DrawHeldItem(player)
+    }
+   
 
     static UpdateVanity(item, player) {
         if (item.IsAir) {
