@@ -3,12 +3,12 @@
 import { using } from '../../../../TL/ModClasses.js';
 
 // Merceless Mode Muhahaha
-import MERCELESS_AI from './Marceless/AIM.js'
+import MERCELESS_AI from './Marceless/AIM.js';
 
 // Projectile register
-import Sickle from './BloodScythe.js'
-import Blood_Shuriken from './BloodSpike.js'
-import Blood_Warn from './EOCGlowRing.js'
+import Sickle from './BloodScythe.js';
+import Blood_Shuriken from './BloodSpike.js';
+import Blood_Warn from './EOCGlowRing.js';
 
 using('Microsoft.Xna.Framework');
 using('TL');
@@ -22,20 +22,17 @@ export default class Eoc extends GlobalNPC {
 	}
 
 	SetStaticDefaults() {
-	    ModProjectile.register(Sickle)
-	    ModProjectile.register(Blood_Shuriken)
-	    ModProjectile.register(Blood_Warn)
+		ModProjectile.register(Sickle);
+		ModProjectile.register(Blood_Shuriken);
+		ModProjectile.register(Blood_Warn);
 		arenaTex = tl.texture.load('Assets/AdditiveTextures/HardEdgeRing.png');
 	}
-	
-    
+
 	SetDefaults(npc) {
-
 		if (npc.type === 4) {
-	
-			npc.life *= 0.8;
-			npc.lifeMax *= 0.8;
-
+			npc.life *= 1.5;
+			npc.lifeMax *= 1.5;
+			npc.color = Color.Red;
 			this.Phase1Dashing = null;
 			this.Phase2Dashing = null;
 			this.inPhaseTranslation = null;
@@ -48,7 +45,7 @@ export default class Eoc extends GlobalNPC {
 
 			this.canSuperDash = false;
 			this.superDashDelay = 0; // 0 to 30
-
+			this.EyeMakeDash = false;
 			this.inPhase4 = null; // 40%
 
 			this.RotateDelay = 0;
@@ -65,7 +62,7 @@ export default class Eoc extends GlobalNPC {
 			this.finalArenaPosition = null;
 
 			this.finalShoot = 0;
-			this.finalArenaScale = 10;
+			this.finalArenaScale = 17;
 			this.canFinalBulletHell = false;
 
 			this.finalArenaRotation = 0;
@@ -73,9 +70,8 @@ export default class Eoc extends GlobalNPC {
 	}
 
 	DrawExtra(npc) {
-
 		let player = Main.player[Main.myPlayer];
-        
+
 		// ArenaLogic disable the arena if player died.
 		if (Main.player[Main.myPlayer].statLife === 0) return (this.finalPhaseIsReal = false);
 		if (this.finalArenaPosition == null) return;
@@ -104,10 +100,17 @@ export default class Eoc extends GlobalNPC {
 	}
 
 	AI(npc) {
+		if (npc.type == 5) {
+			const player = Main.player[npc.target];
+			let dir = vector2.Normalize(vector2.Subtract(player.Center, npc.Center));
+			if (this.EyeMakeDash) npc.velocity = vector2.Multiply(dir, 20);
+
+			vector2.Multiply(npc.velocity, 2);
+		}
 
 		if (npc.type == 4) {
-
-				this.phase1 = npc.ai[0] == 0;
+			const player = Main.player[npc.target];
+			this.phase1 = npc.ai[0] == 0;
 
 			this.inPhase1 = npc.life > npc.lifeMax * 0.8;
 			this.inPhase2 = npc.life < npc.lifeMax * 0.8 && npc.life > npc.lifeMax * 0.5;
@@ -123,7 +126,7 @@ export default class Eoc extends GlobalNPC {
 
 			if (Main.player[Main.myPlayer].statLife === 0) return;
 			this.finalArenaPosition = npc.Center;
-			if (this.finalArenaScale > 3.3) this.finalArenaScale -= 0.000625;
+			if (this.finalArenaScale > 5.0) this.finalArenaScale -= 0.01;
 
 			let damage = 15;
 
@@ -131,32 +134,15 @@ export default class Eoc extends GlobalNPC {
 				return generic.NewProjectileSimple(pos, vector2.instance(0, 0), ModProjectile.getTypeByName('RedGlowRing'), 25);
 			};
 
-			const ShootCone = () => {
-				let multiplier = 0.3;
-				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * multiplier, npc.velocity.Y), ModProjectile.getTypeByName('BloodSpike'), damage);
-				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * multiplier, npc.velocity.Y * 4), ModProjectile.getTypeByName('BloodSpike'), damage);
-				generic.NewProjectileSimple(npc.Center, vector2.instance(npc.velocity.X * multiplier, npc.velocity.Y / 4), ModProjectile.getTypeByName('BloodSpike'), damage);
-			};
-
 			const ShootCrossBloodBloodScythe = () => {
-				let vel = 0.3;
-				let digVel = vel / 2; // diagonal velocity.
-				const allDir = [
-					vector2.instance(vel, 0), //
-					vector2.instance(-vel, 0), //
-					vector2.instance(0, vel), //
-					vector2.instance(0, -vel), //
-					vector2.instance(digVel, digVel), //
-					vector2.instance(-digVel, digVel), //
-					vector2.instance(digVel, -digVel), //
-					vector2.instance(-digVel, -digVel) //
-				];
-
-				allDir.forEach(allDir => {
-					generic.NewProjectileSimple(npc.Center, allDir, ModProjectile.getTypeByName('BloodScythe'), damage);
+				let vel = 0.4;
+				const angles = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
+				angles.forEach(angle => {
+					let rad = (Math.PI / 180) * angle;
+					let dir = vector2.instance(Math.cos(rad) * vel, Math.sin(rad) * vel);
+					generic.NewProjectileSimple(npc.Center, dir, ModProjectile.getTypeByName('BloodScythe'), damage);
 				});
 			};
-			const player = Main.player[npc.target];
 
 			const ExplosionEffect = () => {
 				ShootCrossBloodBloodScythe();
@@ -208,9 +194,12 @@ export default class Eoc extends GlobalNPC {
 				let Phase1Dashing = npc.ai[2] == 1 && npc.ai[1] == 2;
 				let dashing = npc.ai[2] == 1;
 
-				if (dashing) ExplosionEffect();
+				if (dashing) {
+					ExplosionEffect();
+					this.EyeMakeDash = true;
+				} else this.EyeMakeDash = false;
 				if (Phase1Dashing) {
-				    let dashSpeed = 1.8 // Speed Multiplier
+					let dashSpeed = 2.5; // Speed Multiplier
 					npc.velocity = vector2.Multiply(npc.velocity, dashSpeed);
 				}
 				// in phase 1 and life > 80
@@ -240,8 +229,6 @@ export default class Eoc extends GlobalNPC {
 					if (this.Phase2Dashing) {
 						npc.velocity = vector2.Multiply(npc.velocity, 1.4);
 						MakeRedCircleWarn();
-
-						ShootCone();
 					}
 				};
 
@@ -275,7 +262,6 @@ export default class Eoc extends GlobalNPC {
 	}
 
 	OnHitPlayer(npc, player) {
-
 		if (npc.type === 4) {
 			player.AddBuff(BuffID.BrokenArmor, 60 * 15, true, false);
 			player.AddBuff(BuffID.Venom, 30 * 2, true, false);
