@@ -12,22 +12,17 @@ import { GlobalProjectile } from '../TL/GlobalProjectile.js';
 
 
 import DebuffZone from '../Players/DebuffEnvironment.js'
-import KingSlime from '../NPCs/Vanilla/Bosses/SlimeBoss.js';
-
-
-// dont crash please GOOOOOD
-import Slimy_Spike from '../Projectiles/Eternal/SlimySpike.js';
-import Falling_Slime from '../Projectiles/Eternal/FallingSlime.js';
 
 import Slimes_Rework from '../NPCs/Vanilla/Slimes.js'
 import EyeOfChuthulho from '../NPCs/Vanilla/Bosses/EOC/AI.js';
+import KingSlime from '../NPCs/Vanilla/Bosses/KingSlime/AI.js';
 
 // =============================================================================================
 
 export function Register() {
 	Items();
 	NPCs();
-	projectiles();
+	// projectiles();
 	ModPlayers()
 }
 
@@ -45,8 +40,4 @@ function Items() {
 	// ModItem.register(itemTest);
 }
 
-function projectiles() {
-	ModProjectile.register(Falling_Slime)
-	ModProjectile.register(Slimy_Spike)
-	
-}
+function projectiles() {}
