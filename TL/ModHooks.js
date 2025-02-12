@@ -1071,8 +1071,9 @@ export class ModHooks {
 		Terraria.Main.Initialize_AlmostEverything.hook((original, self) => {
 			original(self);
 			ItemLoader.InitializeRegisteredItems();
+			NPCLoader.SetStaticDefaults();
 			ProjectileLoader.InitializeRegisteredProjectile();
-            NPCLoader.SetStaticDefaults();
+            
             
 			ProjectileLoader.RegisteredProjectile.forEach(projectile => {
 				const texturePath = projectile.Texture || `Projectiles/${projectile.constructor.name}`;
