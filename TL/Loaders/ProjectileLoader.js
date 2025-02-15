@@ -137,7 +137,7 @@ export class ProjectileLoader {
 	}
 
 	static OnSpawn(projectile, source) {
-		ModProjectile.getModProjectile(projectile.type)?.OnSpawnMod(source);
+		ModProjectile.getModProjectile(projectile.type)?.OnSpawnMod(projectile, source);
 
 		for (let globalProjectile of GlobalProjectile.RegisteredProjectile) {
 			globalProjectile.OnSpawn(projectile, source);
