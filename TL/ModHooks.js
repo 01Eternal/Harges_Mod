@@ -193,14 +193,22 @@ export class ModHooks {
 		Terraria.Projectile.AI.hook((original, self) => {
 			original(self);
 			// Main.NewText(`${ModHooks.ProjSpawned}`, 100, 100, 100)
-			if (ModHooks.ProjSpawned == false) {
+			/*if (ModHooks.ProjSpawned == false) {
 				ModHooks.ProjSpawned = true;
 				// Main.NewText('called',100, 100, 100) // Called
 				ProjectileLoader.OnSpawn(self);
-			}
+			}*/
 
 			ProjectileLoader.AI(self);
 			//Main.NewText(`Hook Is Called ${ModHooks.ProjSpawned}`, 100, 100, 100)
+		});
+		
+		Terraria.Projectile["int NewProjectile(IEntitySource spawnSource, float X, float Y, float SpeedX, float SpeedY, int Type, int Damage, float KnockBack, int Owner, float ai0, float ai1, float ai2)"].hook((orig, self, spawnSource, X, Y, SpeedX, SpeedY, Type, Damage, KnockBack, Owner, ai0, ai1, ai2) => {
+			let proj = orig(self, spawnSource, X, Y, SpeedX, SpeedY, Type, Damage, KnockBack, Owner, ai0, ai1, ai2);
+			
+			ProjectileLoader.OnSpawn(Terraria.Main.projectile[proj], spawnSource);
+			
+			return proj;
 		});
 
 		Terraria.WorldGen.KillTile.hook((original, i, j, fail, effectOnly, noItem) => {
