@@ -193,11 +193,6 @@ export class ModHooks {
 		Terraria.Projectile.AI.hook((original, self) => {
 			original(self);
 			// Main.NewText(`${ModHooks.ProjSpawned}`, 100, 100, 100)
-			/*if (ModHooks.ProjSpawned == false) {
-				ModHooks.ProjSpawned = true;
-				// Main.NewText('called',100, 100, 100) // Called
-				ProjectileLoader.OnSpawn(self);
-			}*/
 
 			ProjectileLoader.AI(self);
 			//Main.NewText(`Hook Is Called ${ModHooks.ProjSpawned}`, 100, 100, 100)
