@@ -25,7 +25,16 @@ const EntitySpriteDraw =
 	Main['void EntitySpriteDraw(Texture2D texture, Vector2 position, Rectangle sourceRectangle, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float worthless)'];
 const v_Subtract = Microsoft.Xna.Framework.Vector2['Vector2 Subtract(Vector2 value1, Vector2 value2)'];
 const Frame = Terraria.Utils['Rectangle Frame(Texture2D tex, int horizontalFrames, int verticalFrames, int frameX, int frameY, int sizeOffsetX, int sizeOffsetY)'];
+const Rectangle = new NativeClass('Microsoft.Xna.Framework', 'Rectangle');
 
+const rectangle = (x, y, width, height) => {
+	const rectangle = Rectangle.new();
+	rectangle.X = x;
+	rectangle.Y = y;
+	rectangle.Width = width;
+	rectangle.Height = height;
+	return rectangle;
+};
 export class ModHooks {
 	static OnHitTemp = [];
 	static ExtractinatorTemp = {};
@@ -45,26 +54,40 @@ export class ModHooks {
 		});
 
 		Terraria.NPC.AI.hook((original, self) => {
+				for (let npc of GlobalNPC.RegisteredNPC) {
+				npc.PreAI(self);
+				}
+			
 			original(self);
 
 			for (let npc of GlobalNPC.RegisteredNPC) {
 				npc.AI(self);
 			}
 		});
-
+		
+		/*Terraria.NPC.UpdateNPC.hook((orig, self, i) => {
+		    orig(self, i)
+		    
+		    	for (let npc of GlobalNPC.RegisteredNPC) {
+				npc.UpdateNPC(self, i);
+			}
+		});*/
+		
 		Terraria.Player.Hurt.hook((original, self, damageSource, Damage, hitDirection, pvp, quiet, Crit, cooldownCounter, dodgeable) => {
 			let modifiers = PlayerLoader.PreHurtModifiers;
 			modifiers.damage = Damage;
 			modifiers.hitDirection = hitDirection;
 			modifiers.crit = Crit;
 
-			let projID = damageSource._sourceProjectileType;
-			if (projID >= ProjectileLoader.MAX_VANILLA_PROJECTILE_ID) {
-				Array.from(Main.projectile).forEach((Proj, i) => {
-					if (Proj.type === projID) ProjectileLoader.OnHitPlayer(Proj, self, 0, 0);
-				});
-			}
-
+	let projID = damageSource._sourceProjectileType;
+if (projID >= ProjectileLoader.MAX_VANILLA_PROJECTILE_ID) {
+    for (const Proj of Array.from(Main.projectile)) {
+        if (Proj.type === projID) {
+            ProjectileLoader.OnHitPlayer(Proj, self, 0, 0);
+            break;
+        }
+    }
+}
 			let npcID = damageSource._sourceNPCIndex;
 			if (npcID > 0) {
 				NPCLoader.OnHitPlayer(Main.npc[npcID], self);
@@ -193,17 +216,14 @@ export class ModHooks {
 		Terraria.Projectile.AI.hook((original, self) => {
 			original(self);
 			// Main.NewText(`${ModHooks.ProjSpawned}`, 100, 100, 100)
+			if (ModHooks.ProjSpawned == false) {
+				ModHooks.ProjSpawned = true;
+				// Main.NewText('called',100, 100, 100) // Called
+				ProjectileLoader.OnSpawn(self);
+			}
 
 			ProjectileLoader.AI(self);
 			//Main.NewText(`Hook Is Called ${ModHooks.ProjSpawned}`, 100, 100, 100)
-		});
-		
-		Terraria.Projectile["int NewProjectile(IEntitySource spawnSource, float X, float Y, float SpeedX, float SpeedY, int Type, int Damage, float KnockBack, int Owner, float ai0, float ai1, float ai2)"].hook((orig, self, spawnSource, X, Y, SpeedX, SpeedY, Type, Damage, KnockBack, Owner, ai0, ai1, ai2) => {
-			let proj = orig(self, spawnSource, X, Y, SpeedX, SpeedY, Type, Damage, KnockBack, Owner, ai0, ai1, ai2);
-			
-			ProjectileLoader.OnSpawn(Terraria.Main.projectile[proj], spawnSource);
-			
-			return proj;
 		});
 
 		Terraria.WorldGen.KillTile.hook((original, i, j, fail, effectOnly, noItem) => {
@@ -243,7 +263,7 @@ export class ModHooks {
 			if (self.type < ItemLoader.MAX_VANILLA_ID) {
 				return original(self, pre);
 			}
-
+/*
 			if (pre === 0 || self.type === 0) {
 				return false;
 			}
@@ -1060,6 +1080,7 @@ export class ModHooks {
 			self.value = self.value * value;
 			self.prefix = prefix;
 			return true;
+			*/
 		});
 
 		Terraria.Main.DrawProjDirect.hook((original, self, proj, i) => {
@@ -1205,18 +1226,35 @@ export class ModHooks {
 			const armor = self.armor;
 			ItemLoader.UpdateArmorSet(self, armor[0], armor[1], armor[2]);
 		});
+        
+Utils["Rectangle Frame(Texture2D tex, int horizontalFrames, int verticalFrames, int frameX, int frameY, int sizeOffsetX, int sizeOffsetY)"]
+    .hook((original, tex, horizontalFrames, verticalFrames, frameX, frameY, sizeOffsetX, sizeOffsetY) => {
 
-		Terraria.Utils['Rectangle Frame(Texture2D tex, int horizontalFrames, int verticalFrames, int frameX, int frameY, int sizeOffsetX, int sizeOffsetY)'].hook(
-			(original, tex, horizontalFrames, verticalFrames, frameX, frameY, sizeOffsetX, sizeOffsetY) => {
-				const textureOverrideInfo = ModTexture.overrideFrames[tex._sourceLoadAsset];
-				if (textureOverrideInfo != undefined && textureOverrideInfo != -1) {
-					verticalFrames = textureOverrideInfo;
-				}
+        const textureOverrideInfo = ModTexture.overrideFrames[tex._sourceLoadAsset];
 
-				const result = original(tex, horizontalFrames, verticalFrames, frameX, frameY, sizeOffsetX, sizeOffsetY);
-				return result;
-			}
-		);
+        if (textureOverrideInfo !== undefined && textureOverrideInfo > 0 && tex._sourceLoadAsset.includes("Items/")) {
+            horizontalFrames = textureOverrideInfo;
+            verticalFrames = 1;
+            
+            let textureWidth = tex.UnityWidth ?? tex.Width ?? 0;
+            let textureHeight = tex.UnityHeight ?? tex.Height ?? 0;
+
+            let frameWidth = Math.floor(textureWidth / horizontalFrames);
+            
+            let frameHeight = textureHeight;
+
+            //Main.NewText(`Texture: ${tex._sourceLoadAsset} | Frame Width: ${frameWidth} | Frame Height: ${frameHeight}`, 0, 255, 0);
+
+            frameX = Math.floor((Main.GameUpdateCount / 5) % horizontalFrames);
+            frameY = 0;
+
+            let frame = rectangle(frameX * frameWidth, frameY * frameHeight, frameWidth, frameHeight);
+
+            return frame;
+        }
+
+        return original(tex, horizontalFrames, verticalFrames, frameX, frameY, sizeOffsetX, sizeOffsetY);
+    });
 
 		Terraria.Item.GetDrawHitbox.hook((original, type, user) => {
 			let result = original(type, user);
@@ -1306,7 +1344,9 @@ export class ModHooks {
 		});
 
 		Terraria.Player.UpdateLifeRegen.hook((original, self) => {
-			let flag = false;
+		    original(self)
+		    PlayerLoader.UpdateLifeRegen(self)
+			/*let flag = false;
 			if (self.shinyStone && Math.abs(self.velocity.X) < 0.05 && Math.abs(self.velocity.Y) < 0.05 && self.itemAnimation === 0) {
 				flag = true;
 			}
@@ -1736,7 +1776,7 @@ export class ModHooks {
 						self.KillMe(Terraria.DataStructures.PlayerDeathReason.ByOther(8), 10.0, 0, false);
 					}
 				}
-			}
+			}*/
 		});
 
 		Terraria.Player.UpdateDead.hook((original, self) => {
@@ -2274,12 +2314,12 @@ export class ModHooks {
 			const player = Terraria.Main.PendingPlayer;
 			player.inventory[3]['void SetDefaults(int Type)'](3278);
 		});
-
+/*
 		Terraria.Player.OpenBossBag.hook((original, self, type) => {
 			ItemLoader.OpenVanillaBag('bossBag', self, type);
 
 			original(self, type);
-		});
+		});*/
 
 		/*  Terraria.Player.OpenFishingCrate.hook((original, self, crateItemID) => {
             ItemLoader.OpenVanillaBag('crate', self, crateItemID);

@@ -1,130 +1,147 @@
-/** @format */
+import { ModLocalization } from "./ModLocalization.js";
+import { ModHooks } from "./ModHooks.js";
 
-import { ModLocalization } from './ModLocalization.js';
-import { ModHooks } from './ModHooks.js';
+import { ModTexture } from "./ModTexture.js"
+import { ModTexturedType } from "./ModTexturedType.js"
 
-import { ModTexture } from './ModTexture.js';
-import { ModTexturedType } from './ModTexturedType.js';
+import { Terraria, Microsoft } from "./ModImports.js";
+import { ProjectileLoader } from "./Loaders/ProjectileLoader.js";
 
-import { Terraria, Microsoft } from './ModImports.js';
-import { ProjectileLoader } from './Loaders/ProjectileLoader.js';
 
-export class ModProjectile extends ModTexturedType {
-	Projectile = undefined;
-	Type = undefined;
-	AIType = undefined;
-	DrawHeldProjInFrontOfHeldItemAndArms = undefined;
-	DrawOffsetX = undefined;
-	DrawOriginOffsetY = undefined;
-	DrawOriginOffsetX = undefined;
+export class ModProjectile extends ModTexturedType { 
 
-	constructor() {
-		super();
-	}
+    Projectile = undefined;
+    Type = undefined;
+    AIType = undefined;
+    DrawHeldProjInFrontOfHeldItemAndArms = undefined;
+    DrawOffsetX = undefined;
+    DrawOriginOffsetY = undefined;
+    DrawOriginOffsetX = undefined;
 
-	SetStaticDefaults() {
-		if (this.Projectile.hostile) {
-			Terraria.Main.projHostile[this.Type] = true;
-		}
+    constructor() {
+        super();
+    }
 
-		if (this.Projectile.aiStyle == 7) {
-			Terraria.Main.projHook[this.Type] = true;
-		}
-	}
+    SetStaticDefaults() {
+        if (this.Projectile.hostile) {
+            Terraria.Main.projHostile[this.Type] = true;
+        }
 
-	SetDefaults() {}
+        if (this.Projectile.aiStyle == 7) {
+            Terraria.Main.projHook[this.Type] = true;
+        }
 
-	OnSpawnMod(projectile, source) {}
+    }
 
-	PreAIMod() {
-		return true;
-	}
+    SetDefaults() {
 
-	OnHitPlayerMod(Projectile, target, damage, crit) {}
+    }
 
-	AIMod(projectile) {}
+    OnSpawnMod(source) {
 
-	PostAIMod() {}
+    }
 
-	ShouldUpdatePosition() {
-		return true;
-	}
+    PreAIMod() {
+        return true;
+    }
+    
+    OnHitPlayerMod(Projectile, target, damage, crit) {
+    
+    }
+    
+    AIMod(projectile) {
+    }
 
-	TileCollideStyleMod(width, height, fallThrough, hitboxCenterFrac) {
-		return true;
-	}
+    PostAIMod() {
+    }
 
-	OnTileCollideMod(oldVelocity) {
-		return true;
-	}
+    ShouldUpdatePosition() {
+        return true;
+    }
 
-	PreKillMod(timeLeft) {
-		return true;
-	}
+    TileCollideStyleMod(width, height, fallThrough, hitboxCenterFrac) {
+        return true;
+    }
 
-	KillMod(timeLeft) {}
+    OnTileCollideMod(oldVelocity) {
+        return true;
+    }
 
-	CanDamage() {
-		return null;
-	}
+    PreKillMod(timeLeft) {
+        return true;
+    }
 
-	CanHitNPCMod(target) {
-		return null;
-	}
+    KillMod(timeLeft) {
 
-	OnHitNPC(projectile, target, damage, knockback) {}
+    } 
 
-	CanHitPlayerMod(target) {
-		return true;
-	}
+    CanDamage() {
+        return null;
+    }
+    
+    CanHitNPCMod(target) {
+        return null;
+    }
 
-	Kill(proj, timeLeft) {}
+    OnHitNPC(projectile, target, damage, knockback) {
+    }
 
-	OnHitPlayerMod(target, damage, crit) {}
+    CanHitPlayerMod(target) {
+        return true;
+    }
+    
+    Kill(proj, timeLeft) {    	
 
-	CollidingMod(projHitbox, targetHibox) {
-		return null;
-	}
+    }
 
-	GetAlphaMod(lightColor) {
-		return null;
-	}
+    OnHitPlayerMod(target, damage, crit) {
 
-	PreDrawExtrasMod() {
-		return true;
-	}
+    }
 
-	PreDrawMod(projectile, lightColor) {
-		return true;
-	}
+    CollidingMod(projHitbox, targetHibox) {
+        return null;
+    }
 
-	PostDrawMod(lightColor) {}
+    GetAlphaMod(lightColor) {
+        return null;
+    } 
 
-	static register(projectile) {
-		ProjectileLoader.register(projectile);
-	}
+    PreDrawExtrasMod() {
+        return true;
+    }
 
-	static isModType(type) {
-		return type >= ModProjectile.MAX_VANILLA_ID;
-	}
+    PreDrawMod(projectile, lightColor) {
+        return true;
+    }
 
-	static isModProjectile(projectile) {
-		return ModProjectile.isModType(projectile.type);
-	}
+    PostDrawMod(lightColor) {
+    }
 
-	static getModProjectile(type) {
-		return ProjectileLoader.getModProjectile(type);
-	}
+    static register(projectile) {
+        ProjectileLoader.register(projectile);
+    }
 
-	static getByName(name) {
-		ProjectileLoader.getByName(name);
-	}
+    static isModType(type) {
+        return type >= ModProjectile.MAX_VANILLA_ID;
+    }
 
-	static getTypeByName(name) {
-		return ProjectileLoader.getTypeByName(name);
-	}
+    static isModProjectile(projectile) {
+        return ModProjectile.isModType(projectile.type);
+    }
 
-	/*static InitializeProjectile(projectile) {
+    static getModProjectile(type) {
+        return ProjectileLoader.getModProjectile(type);
+    }
+
+    static getByName(name) {
+        ProjectileLoader.getByName(name);
+    }
+
+    static getTypeByName(name) {
+        return ProjectileLoader.getTypeByName(name);
+    }
+
+    /*static InitializeProjectile(projectile) {
         projectile.Projectile = {};
         
         const projectileName = projectile.constructor.name;

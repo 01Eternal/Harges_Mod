@@ -10,50 +10,37 @@ export class GlobalNPC {
         ModHooks.initialize();
     }
 
-    SetDefaults(npc) {
-    }
-    
-    SetStaticDefaults() {
-    
-    }
+    SetDefaults(npc) {}
 
-    AI(npc){
-    }
-    
-    Hurt(npc) {
-    }
-    
-    OnHitPlayer(npc, player) {
-    
-    }
-      
-    OnKill(npc) {
-    }
-    
-    NPCLoot(npc) {
-    }
-    
-    DrawExtra(npc) {
-    
-    }
+    SetStaticDefaults() {}
 
-    ModifyNPCLoot(npcLoot) {
-    }
-    
-    PostDraw(npc, spriteBatch, screenPos) {
-    }
+    PreAI(npc) {}
 
-    SetupShop(type, shop, nextSlot) {
-    }
+    UpdateNPC(npc, i) {}
 
-    SetupTravelShop(shop, nextSlot) {
-    }
+    AI(npc) {}
 
-    ScaleExpertStats(npc, numPlayers, bossLifeScale) {
-    }
+    Hurt(npc) {}
 
-    HitEffect(npc, hitDirection, damage) {
-    }
+    OnHitPlayer(npc, player) {}
+
+    OnKill(npc) {}
+
+    NPCLoot(npc) {}
+
+    DrawExtra(npc) {}
+
+    ModifyNPCLoot(npcLoot) {}
+
+    PostDraw(npc, spriteBatch, screenPos) {}
+
+    SetupShop(type, shop, nextSlot) {}
+
+    SetupTravelShop(shop, nextSlot) {}
+
+    ScaleExpertStats(npc, numPlayers, bossLifeScale) {}
+
+    HitEffect(npc, hitDirection, damage) {}
 
     CheckDead(npc) {
         return true;
@@ -66,4 +53,6 @@ export class GlobalNPC {
     CheckActive(npc) {
         return true;
     }
+
+    DrawInterface() {}
 }

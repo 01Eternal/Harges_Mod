@@ -12,9 +12,7 @@ export class ModTexture {
             this.texture_path = `${tl.mod.uuid}/${name}`;
             this.asset = new ModAsset(Microsoft.Xna.Framework.Graphics.Texture2D, this.texture_path, this.texture);
             this.texture._sourceLoadAsset = this.texture_path;
-            if (horizontalFrames !== -1) {
-                ModTexture.overrideFrames[this.texture_path] = horizontalFrames;
-            }
+            if (horizontalFrames !== -1) ModTexture.overrideFrames[this.texture_path] = horizontalFrames;
         }
     }
 }
